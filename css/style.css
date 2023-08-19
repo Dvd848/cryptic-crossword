@@ -61,3 +61,33 @@ h2 {
     column-gap: 10px;
     list-style-type: disc;
 }
+
+#crossword {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#crossword svg {
+    z-index: 10;
+    position: absolute;
+    top: 0;
+}
+
+
+.grid-row {
+    display: flex;
+}
+  
+.dummy_input {
+    width: 40px;
+    height: 40px;
+    padding: 0px;
+    border: none;
+    background: none;
+    margin: 0px;
+    outline: none;
+    vertical-align: baseline;
+    /*background: red;*/
+}

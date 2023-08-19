@@ -134,6 +134,8 @@ export default class Display
     };
     private storageContext : StorageContext | null = null;
 
+    private readonly TILE_DIMENSIONS = 40;
+
     constructor()
     {
         this.crossword = document.getElementById("crossword")!;
@@ -154,6 +156,7 @@ export default class Display
         this.storageContext = new StorageContext(puzzleInfo.id, puzzleInfo.dimensions.rows, puzzleInfo.dimensions.columns);
 
         this.crossword.appendChild(this.createPuzzleSvg(puzzleInfo));
+        this.crossword.appendChild(this.createDummyInputGrid(puzzleInfo.dimensions.rows, puzzleInfo.dimensions.columns))
         this.clues_horizontal.appendChild(this.createClues("across", puzzleInfo));
         this.clues_vertical.appendChild(this.createClues("down", puzzleInfo));
 
@@ -177,12 +180,35 @@ export default class Display
         return dl;
     }
 
+    private createDummyInputGrid(rows: number, cols: number) {
+        const container = document.createElement("div");
+
+        for (let rowIdx = 0; rowIdx < rows; rowIdx++) 
+        {
+            const row = document.createElement("div");
+            row.className = "grid-row";
+            
+            for (let colIdx = 0; colIdx < cols; colIdx++) 
+            {
+                const input = document.createElement("input");
+                input.type = "text";
+                input.className = "dummy_input";
+                input.id = `dummy_input_r${rowIdx}_c${colIdx}`;
+                row.insertBefore(input, row.firstChild);
+            }
+            
+            container.appendChild(row);
+        }
+
+        return container;
+    }
+
     private createPuzzleSvg(puzzleInfo: CrosswordPuzzleInfo) : SVGElement {
-        const TILE_DIMENSIONS = 40;
+        
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 
-        svg.setAttribute("width", `${TILE_DIMENSIONS * puzzleInfo.dimensions.columns}`);
-        svg.setAttribute("height", `${TILE_DIMENSIONS * puzzleInfo.dimensions.rows}`);
+        svg.setAttribute("width", `${this.TILE_DIMENSIONS * puzzleInfo.dimensions.columns}`);
+        svg.setAttribute("height", `${this.TILE_DIMENSIONS * puzzleInfo.dimensions.rows}`);
 
         this.grid = new Array(puzzleInfo.dimensions.rows);
 
@@ -195,10 +221,10 @@ export default class Display
                 const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
 
                 const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                rect.setAttribute("x", `${TILE_DIMENSIONS * col}`);
-                rect.setAttribute("y", `${TILE_DIMENSIONS * row}`);
-                rect.setAttribute("width", `${TILE_DIMENSIONS}`);
-                rect.setAttribute("height", `${TILE_DIMENSIONS}`);
+                rect.setAttribute("x", `${this.TILE_DIMENSIONS * col}`);
+                rect.setAttribute("y", `${this.TILE_DIMENSIONS * row}`);
+                rect.setAttribute("width", `${this.TILE_DIMENSIONS}`);
+                rect.setAttribute("height", `${this.TILE_DIMENSIONS}`);
                 rect.setAttribute("stroke", "black");
                 rect.setAttribute("stroke-width", "1");
                 rect.setAttribute("fill", "white");
@@ -212,16 +238,16 @@ export default class Display
                     if (puzzleInfo.grid[row][col] != "")
                     {
                         const clue_id = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                        clue_id.setAttribute("x", `${col * TILE_DIMENSIONS + TILE_DIMENSIONS - 4}`);
-                        clue_id.setAttribute("y", `${row * TILE_DIMENSIONS + 12}`);
+                        clue_id.setAttribute("x", `${col * this.TILE_DIMENSIONS + this.TILE_DIMENSIONS - 4}`);
+                        clue_id.setAttribute("y", `${row * this.TILE_DIMENSIONS + 12}`);
                         clue_id.setAttribute("style", "fill: black; font-size: 10px;");
                         clue_id.textContent = puzzleInfo.grid[row][col];
                         group.appendChild(clue_id);
                     }
 
                     const letter = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    letter.setAttribute("x", `${col * TILE_DIMENSIONS + (TILE_DIMENSIONS / 2)}`);
-                    letter.setAttribute("y", `${row * TILE_DIMENSIONS + (TILE_DIMENSIONS - (TILE_DIMENSIONS / 4))}`);
+                    letter.setAttribute("x", `${col * this.TILE_DIMENSIONS + (this.TILE_DIMENSIONS / 2)}`);
+                    letter.setAttribute("y", `${row * this.TILE_DIMENSIONS + (this.TILE_DIMENSIONS - (this.TILE_DIMENSIONS / 4))}`);
                     letter.setAttribute("text-anchor", "middle");
                     letter.setAttribute("style", "fill: black; font-size: 30px;");
                     group.appendChild(letter);
@@ -328,7 +354,9 @@ export default class Display
         gridElement = this.grid[coordinate.row][coordinate.col];
 
         gridElement?.rect.setAttribute("fill", "#ffffcc");
-        gridElement?.rect.setAttribute("class", "highlighted");        
+        gridElement?.rect.setAttribute("class", "highlighted");
+        
+        document.getElementById(`dummy_input_r${coordinate.row}_c${coordinate.col}`)?.focus();
     }
 
     private handleRectClick(row: number, col: number) : void
@@ -352,39 +380,57 @@ export default class Display
 
     private addKeyListener()
     {
-        document.addEventListener("keydown", (event) => {
-            if (this.clickContext.activeCoordinate == null)
+        const that = this;
+        const eventListener = function(event: KeyboardEvent) 
+        {
+            let eventKey = event.key;
+            if (eventKey == "Unidentified")
+            {
+                // Android
+                eventKey = (event.target as HTMLInputElement).value
+            }
+
+            (event.target as HTMLInputElement).value = '';
+            if (that.clickContext.activeCoordinate == null)
             {
                 return;
             }
 
-            const gridElement = this.grid[this.clickContext.activeCoordinate.row][this.clickContext.activeCoordinate.col];
+            const gridElement = that.grid[that.clickContext.activeCoordinate.row][that.clickContext.activeCoordinate.col];
             if (gridElement == null)
             {
                 return;
             }
 
-            if (event.key.length === 1 && /^[a-zA-Z\u0590-\u05FF]$/.test(event.key)) 
+            if (eventKey.length === 1 && /^[a-zA-Z\u0590-\u05FF]$/.test(eventKey)) 
             {
-                gridElement.text.textContent = event.key;
-                this.storageContext?.setLetter(this.clickContext.activeCoordinate, gridElement.text.textContent);
-                this.clickContext.activeCoordinate = this.nextCoordinate(this.clickContext.activeCoordinate);
-                this.highlightDefinition(this.clickContext.activeCoordinate);
+                gridElement.text.textContent = eventKey;
+                that.storageContext?.setLetter(that.clickContext.activeCoordinate, gridElement.text.textContent);
+                that.clickContext.activeCoordinate = that.nextCoordinate(that.clickContext.activeCoordinate);
+                that.highlightDefinition(that.clickContext.activeCoordinate);
             }
-            else if (event.key === "Backspace")
-            {
-                gridElement.text.textContent = '';
-                this.storageContext?.setLetter(this.clickContext.activeCoordinate, gridElement.text.textContent);
-                this.clickContext.activeCoordinate = this.prevCoordinate(this.clickContext.activeCoordinate);
-                this.highlightDefinition(this.clickContext.activeCoordinate);
-            }
-            else if (event.key == "Delete")
+            else if (eventKey === "Backspace")
             {
                 gridElement.text.textContent = '';
-                this.storageContext?.setLetter(this.clickContext.activeCoordinate, gridElement.text.textContent);
+                that.storageContext?.setLetter(that.clickContext.activeCoordinate, gridElement.text.textContent);
+                that.clickContext.activeCoordinate = that.prevCoordinate(that.clickContext.activeCoordinate);
+                that.highlightDefinition(that.clickContext.activeCoordinate);
             }
-        });
-        
+            else if (eventKey == "Delete")
+            {
+                gridElement.text.textContent = '';
+                that.storageContext?.setLetter(that.clickContext.activeCoordinate, gridElement.text.textContent);
+            }
+            event.stopImmediatePropagation();
+            
+        };
+
+        document.body.addEventListener("keyup", eventListener);
+        Array.from(document.getElementsByClassName("dummy_input")).forEach(
+            (element, index, array) => {
+                (element as HTMLInputElement).addEventListener("keyup", eventListener);
+            }
+        );
     }
 
     public showIndex(indexInfo: IndexdInfo) : void
