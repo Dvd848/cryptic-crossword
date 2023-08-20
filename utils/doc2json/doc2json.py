@@ -11,9 +11,12 @@ REGEX_CROSSWORD_ID = re.compile('\d+')
 
 def is_cell_blocked(cell):
     match = REGEX_TABLE_BACKGROUND.search(cell._tc.xml)
-    result = match.group(1)
-    assert(result in ["auto", "000000", "FFFFFF"])
-    return (result != "auto" and result != "FFFFFF")
+    if match:
+        result = match.group(1)
+        assert(result in ["auto", "000000", "FFFFFF"])
+        return (result != "auto" and result != "FFFFFF")
+    
+    return False
 
 def process_docx_directory(directory_path, out_dir):
     for filename in os.listdir(directory_path):
@@ -72,6 +75,7 @@ def process_crossword(path, out_dir):
                         number = int(match.group(1))
                         text = match.group(2)
                     crossword["definitions"][state.value][number] = text
+    assert(state == State.READ_ACROSS_DEFINITIONS)
 
     assert(len(document.tables) == 1)
     table = document.tables[0]
