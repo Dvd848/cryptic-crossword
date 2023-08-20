@@ -27,7 +27,7 @@ async function showWebpage()
     }
     catch (err)
     {
-        const response = await fetch(`crosswords/index.json`);
+        const response = await fetch(`index.json`);
         const json = await response.json()
         display.showIndex(json);
     }
