@@ -24,7 +24,7 @@ def main():
         "ids": list(sorted(file_names, reverse=True))
     }
 
-    with open(input_directory / index_file, "w") as index_json:
+    with open(input_directory / ".." / index_file, "w") as index_json:
         json.dump(data, index_json)
 
     print(f"Processed {len(file_names)} JSON files and saved to {index_file}.")
