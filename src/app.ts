@@ -17,7 +17,7 @@ async function showWebpage()
         }
 
         const idValue = match[1]; 
-        const response = await fetch(`/crosswords/${idValue}.json`);
+        const response = await fetch(`crosswords/${idValue}.json`);
         if (!response.ok) 
         {
             throw new Error("Can't retrieve crossword");
@@ -27,7 +27,7 @@ async function showWebpage()
     }
     catch (err)
     {
-        const response = await fetch(`/crosswords/index.json`);
+        const response = await fetch(`crosswords/index.json`);
         const json = await response.json()
         display.showIndex(json);
     }
