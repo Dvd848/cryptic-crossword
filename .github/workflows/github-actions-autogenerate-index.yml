@@ -1,0 +1,29 @@
+name: Autogenerate Crossword Index
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'crosswords/**'
+jobs:
+  generate-and-submit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run autogeneration script
+        run: python ./utils/create_index/create_index.py
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "Auto-generate crossword index"
+          git push
