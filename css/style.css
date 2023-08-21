@@ -53,6 +53,7 @@ h2 {
 
 #index {
     padding: 20px;
+    text-align: center;
 }
 
 #crossword_list {
@@ -90,4 +91,14 @@ h2 {
     outline: none;
     vertical-align: baseline;
     /*background: red;*/
+}
+
+#crosswordSelect {
+    width: 60%;
+    margin: 20px auto;
+}
+
+#chooseCrossword {
+    margin: 20px auto;
+    height: 80px;
 }

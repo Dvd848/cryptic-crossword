@@ -435,6 +435,7 @@ export default class Display
 
     public showIndex(indexInfo: IndexdInfo) : void
     {
+        /*
         const crossword_list = document.getElementById("crossword_list")!;
         for (let id of indexInfo.ids)
         {
@@ -447,6 +448,39 @@ export default class Display
         
         }
 
+        document.getElementById("index")!.classList.remove("hide");
+        document.getElementById("loader")?.remove();
+        */
+
+        const sortNumbers = function(ids: number[]): number[] 
+        {
+            return ids.slice().sort((a, b) => b - a);
+        }
+
+        const populateSelect = function (sortedNumbers: number[]): void 
+        {
+            const selectElement = document.getElementById("crosswordSelect") as HTMLSelectElement;
+            
+            sortedNumbers.forEach(number => {
+                const option = document.createElement("option");
+                option.value = String(number);
+                option.textContent = `תשבץ #${number}`;
+                selectElement.appendChild(option);
+            });
+        }
+
+        const handleButtonClick = function(): void 
+        {
+            const selectedCrossword = (document.getElementById("crosswordSelect") as HTMLSelectElement).value;
+            if (selectedCrossword) {
+                window.location.href = `?id=${selectedCrossword}`;
+            }
+        }
+
+        const sortedCrosswordIds = sortNumbers(indexInfo.ids);
+        populateSelect(sortedCrosswordIds);
+
+        document.getElementById("chooseCrossword")?.addEventListener("click", handleButtonClick);
         document.getElementById("index")!.classList.remove("hide");
         document.getElementById("loader")?.remove();
     }
