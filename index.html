@@ -12,6 +12,8 @@
     <link href="css/style.css" rel="stylesheet" />
     <meta name="description" content="ארכיון תשבצי ההיגיון של אינטל">
     <meta name="keywords" content="תשבץ הגיון, תשבץ היגיון, תשבצי היגיון, תשבץ אינטל">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" 
+            integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
 </head>
 
 <body>
@@ -28,7 +30,7 @@
                         <a class="nav-link" aria-current="page" href="?home">ארכיון התשבצים</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">אודות</a>
+                        <a class="nav-link" href="#" data-bs-target="#aboutModal" data-bs-toggle="modal">אודות</a>
                     </li>
                 </ul>
                 <span class="navbar-text">
@@ -60,6 +62,35 @@
             <span class="visually-hidden">טוען...</span>
         </div>
     </div>
+
+    <div class="modal fade" id="aboutModal" tabindex="-1" aria-labelledby="aboutModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title fs-5" id="aboutModalLabel">אודות</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>
+                        מדי שבוע בשבוע, מאז 2013, מתפרסם תשבץ היגיון שבועי תחת הכינוי "תשבץ אינטל". מדובר ביוזמה פרטית בהובלת אודי הרשקוביץ (מהבלוג <a href="https://pinatkafe.com/">פינת הקפה</a>) ודוד זהבי שהחלה בתור רשימת תפוצה מצומצמת במייל הפנימי של אחת ממחלקות הפיתוח של אינטל והתרחבה עם השנים לקבוצה גדולה של חובבי הז'אנר.
+                    </p>
+                    <p>
+                        מטרת אתר זה היא להנגיש את התשבצים כך שניתן יהיה לפתור אותם אונליין. הוא מציע בצורה מקוונת את אוסף תשבצי ההיגיון שהתפרסמו עד כה, אך כמובן שהזכויות על התשבצים עצמם שמורות למחברים המקוריים.
+                    </p>
+                    <p>
+                        קוד המקור של האתר זמין ב-<a href="https://github.com/Dvd848/cryptic-crossword">GitHub</a>. 
+                        <a href="https://github.com/Dvd848/cryptic-crossword/issues">הערות</a> ו<a href="https://github.com/Dvd848/cryptic-crossword/pulls">תרומות קוד</a> יתקבלו בברכה.
+                        <br/>
+                        לפניות בנוגע לתוכן התשבצים עצמם, נא לפנות ישירות לאודי הרשקוביץ דרך <a href="https://pinatkafe.com/%D7%AA%D7%A9%D7%91%D7%A6%D7%99-%D7%94%D7%92%D7%99%D7%95%D7%9F/">הבלוג שלו</a>.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">סגירה</button>
+                </div>
+            </div>
+        </div>
+    </div>
+      
 
     <script src="dist/runtime.bundle.js" type="module"></script>
     <script src="dist/app.bundle.js" type="module"></script>
