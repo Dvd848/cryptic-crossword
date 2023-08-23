@@ -8,8 +8,8 @@ module.exports = {
       }
     },
     watchOptions: {
-        aggregateTimeout: 200,
-        poll: 1000,
+        aggregateTimeout: 10000,
+        poll: 3000,
         ignored: /node_modules/,
       },
     output: {
