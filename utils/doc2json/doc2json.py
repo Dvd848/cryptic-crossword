@@ -20,11 +20,24 @@ def is_cell_blocked(cell):
     return False
 
 def process_docx_directory(directory_path, out_dir):
+    seen = set()
     for filename in os.listdir(directory_path):
         if filename.endswith(".docx"):
             print(f"Parsing '{filename}'")
             file_path = os.path.join(directory_path, filename)
-            process_crossword(file_path, out_dir)
+            cid = process_crossword(file_path, out_dir)
+            if cid in seen:
+                print(f"Error: ID {cid} already processed!")
+                break
+            seen.add(cid)
+
+    max_id = max(seen)
+    missing = []
+    for i in range(1, max_id + 1):
+        if i not in seen:
+            missing.append(i)
+
+    print("The following crosswords are missing: ", missing)
 
 def process_crossword(path, out_dir):
     document = Document(path)
@@ -106,6 +119,8 @@ def process_crossword(path, out_dir):
 
     with open(os.path.join(out_dir, f"{crossword[State.READ_CROSSWORD_ID.value]}.json"), "w", encoding="utf8") as o:
         json.dump(crossword, o, indent=2)
+
+    return crossword[State.READ_CROSSWORD_ID.value]
 
 def main():
     parser = argparse.ArgumentParser(description="Convert Cryptic Crossword from docx to json")
