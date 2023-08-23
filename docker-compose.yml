@@ -14,6 +14,14 @@ services:
       - NODE_ENV=development
     #command: npm start
     command: sh -c "echo 'Waiting for user input...' && sleep infinity"
+  
+  doc2json:
+    build: ./utils/doc2json/
+    volumes:
+      - ./utils/doc2json:/app
+      - ./crosswords:/crosswords
+      - ./tmp/docs:/docs
+    
 
 volumes:
   node_modules:
@@ -21,3 +29,4 @@ volumes:
 # docker-compose exec app sh
 # docker-compose up -d 
 # docker-compose up -d --build
+# docker-compose run --rm doc2json

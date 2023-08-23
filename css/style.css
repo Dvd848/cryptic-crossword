@@ -102,3 +102,15 @@ h2 {
     margin: 20px auto;
     height: 80px;
 }
+
+#solutionModal .modal-header.success {
+    background: #47c9a2;
+}
+
+#solutionModal .modal-header.failure {
+    background: #c86464;
+}
+
+#solutionModal .modal-body {
+    text-align: center;
+}

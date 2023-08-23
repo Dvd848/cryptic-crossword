@@ -50,6 +50,8 @@
             <div id="clues_horizontal" class="clues col"></div>
             <div id="clues_vertical" class="clues col"></div>
         </div>
+        <div class="row" id="checkSolutionWrapper">
+        </div>
     </div>
 
     <div id="index" class="hide">
@@ -91,6 +93,22 @@
             </div>
         </div>
     </div>
+
+    <div class="modal" id="solutionModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="solutionMessage">
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">סגירה</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       
 
     <script src="dist/runtime.bundle.js" type="module"></script>

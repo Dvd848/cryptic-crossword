@@ -1,3 +1,5 @@
+import * as bootstrap from 'bootstrap';
+
 type CrosswordPuzzleInfo = {
     id: number;
     author: string;
@@ -10,6 +12,7 @@ type CrosswordPuzzleInfo = {
         down: { [id: string]: string };
         across: { [id: string]: string };
     };
+    sol_hash: string;
 };
 
 type IndexdInfo = {
@@ -156,12 +159,67 @@ export default class Display
         this.storageContext = new StorageContext(puzzleInfo.id, puzzleInfo.dimensions.rows, puzzleInfo.dimensions.columns);
 
         this.crossword.appendChild(this.createPuzzleSvg(puzzleInfo));
-        this.crossword.appendChild(this.createDummyInputGrid(puzzleInfo.dimensions.rows, puzzleInfo.dimensions.columns))
+        this.crossword.appendChild(this.createDummyInputGrid(puzzleInfo.dimensions.rows, puzzleInfo.dimensions.columns));
         this.clues_horizontal.appendChild(this.createClues("across", puzzleInfo));
         this.clues_vertical.appendChild(this.createClues("down", puzzleInfo));
+        this.setupCheckSolution(puzzleInfo);
 
         document.getElementById("wrapper")!.classList.remove("hide");
         document.getElementById("loader")?.remove();
+    }
+
+    private setupCheckSolution(puzzleInfo: CrosswordPuzzleInfo)
+    {
+        if (typeof (puzzleInfo.sol_hash) === 'undefined' || puzzleInfo.sol_hash == "")
+        {
+            document.getElementById("checkSolutionWrapper")!.innerHTML = "";
+        }
+        else
+        {
+            const digestMessage = async function (message: string) {
+                const leftPad = (s: string, c: string, n: number) => c.repeat(n - s.length) + s;
+                const msgUint8 = new TextEncoder().encode(message); // encode as (utf-8) Uint8Array
+                const hashBuffer = await crypto.subtle.digest("SHA-512", msgUint8); // hash the message
+                const hashArray = Array.from(new Uint8Array(hashBuffer)); // convert buffer to byte array
+                const hashHex = hashArray
+                  .map((b) => leftPad(b.toString(16), "0", 2))
+                  .join(""); // convert bytes to hex string
+                return hashHex;
+              }
+
+            const button = document.createElement("button");
+            const that = this;
+            button.classList.add("btn", "btn-secondary");
+            button.textContent = "בדיקת פתרון";
+            const modal = new bootstrap.Modal(document.getElementById("solutionModal")!, {});
+            button.addEventListener('click', async (event) => {
+                let current_sol = "";
+                for (let row = 0; row < puzzleInfo.dimensions.rows; ++row)
+                {
+                    for (let col = 0; col < puzzleInfo.dimensions.columns; ++col)
+                    {
+                        current_sol += that.grid[row][col]?.text.textContent || "";
+                    }
+                }
+
+                const current_hash = await digestMessage(current_sol);
+                const modalMessage = document.getElementById("solutionMessage")!;
+                const modalHeader = document.getElementById("solutionModal")!.getElementsByClassName("modal-header")![0];
+                if (current_hash === puzzleInfo.sol_hash)
+                {
+                    modalMessage.innerHTML = "<h4>כל הכבוד!</h4><p>פתרתם את התשבץ!</p>";
+                    modalHeader.classList.add("success");
+                    modalHeader.classList.remove("failure");
+                }
+                else{
+                    modalMessage.innerHTML = "<h4>לא בדיוק...</h4><p>אתם עדיין לא שם, נסו שוב.</p>";
+                    modalHeader.classList.add("failure");
+                    modalHeader.classList.remove("success");
+                }
+                modal.show();
+            })
+            document.getElementById("checkSolutionWrapper")!.appendChild(button);
+        }
     }
 
     private createClues(direction: "across" | "down", puzzleInfo: CrosswordPuzzleInfo) : HTMLDListElement

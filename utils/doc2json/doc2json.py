@@ -4,6 +4,7 @@ import enum
 import json
 import re
 import argparse
+import hashlib
 
 REGEX_TABLE_BACKGROUND = re.compile('w:fill=\"(\S*)\"')
 REGEX_DEFINITION = re.compile('\s*(\d+)\s*\)\s*(.*)')
@@ -82,22 +83,29 @@ def process_crossword(path, out_dir):
     crossword["dimensions"]["rows"] = len(table.rows)
     crossword["dimensions"]["columns"] = len(table.rows[0].cells)
 
+    sol = ""
     for row in table.rows:
         row_list = []
+        row_sol = ""
         for cell in row.cells:
             #print(cell._tc.xml)
             if is_cell_blocked(cell):
                 row_list.append('#')
             else:
                 text = "".join(p.text for p in cell.paragraphs).strip()
-                row_list.append(text)
+                hebrew_character = re.search(r'[א-ת]', text)
+                if hebrew_character:
+                    row_sol += hebrew_character.group()
+                number_match = re.search(r'\d+', text)
+                row_list.append(number_match.group() if number_match is not None else "")
         crossword["grid"].append(row_list[::-1])
+        sol += row_sol[::-1]
         assert(len(row_list) == crossword["dimensions"]["columns"])
-
+    
+    crossword["sol_hash"] = hashlib.sha512(sol.encode()).hexdigest() if sol != "" else ""
 
     with open(os.path.join(out_dir, f"{crossword[State.READ_CROSSWORD_ID.value]}.json"), "w", encoding="utf8") as o:
-        json.dump(crossword, o)
-
+        json.dump(crossword, o, indent=2)
 
 def main():
     parser = argparse.ArgumentParser(description="Convert Cryptic Crossword from docx to json")
