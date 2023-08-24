@@ -111,8 +111,13 @@ class StorageContext
         return this.user_input[coordinate.row][coordinate.col];
     }
 
-    public setLetter(coordinate: Coordinate, letter: string) : void
+    public setLetter(coordinate: Coordinate | null, letter: string) : void
     {
+        if (coordinate == null)
+        {
+            return;
+        }
+
         if (coordinate.row < 0 || coordinate.row >= this.rows 
             || coordinate.col < 0 || coordinate.col >= this.cols || letter.length > 1)
         {
@@ -307,12 +312,13 @@ export default class Display
                     letter.setAttribute("x", `${col * this.TILE_DIMENSIONS + (this.TILE_DIMENSIONS / 2)}`);
                     letter.setAttribute("y", `${row * this.TILE_DIMENSIONS + (this.TILE_DIMENSIONS - (this.TILE_DIMENSIONS / 4))}`);
                     letter.setAttribute("text-anchor", "middle");
-                    letter.setAttribute("style", "fill: black; font-size: 30px;");
+                    letter.setAttribute("style", "font-size: 30px;");
+                    letter.setAttribute("fill", "black");
                     group.appendChild(letter);
                     gridElement = {rect: rect, text: letter};
                     letter.addEventListener("click", function(){that.handleRectClick(row, col);});
 
-                    letter.textContent = this.storageContext!.getLetter({row: row, col: col});
+                    this.setGridText(letter, this.storageContext!.getLetter({row: row, col: col}));
                 }
                 
                 svg.appendChild(group);
@@ -436,6 +442,13 @@ export default class Display
         this.highlightDefinition({row: row, col: col});
     }
 
+    private setGridText(textElement: SVGTextElement, letter: string) : void
+    {
+        textElement.setAttribute("fill", /^[a-zA-Zםףץךן]$/.test(letter) ? "red" : "black");
+        textElement.textContent = letter;
+        this.storageContext?.setLetter(this.clickContext.activeCoordinate, letter);
+    }
+
     private addKeyListener()
     {
         const that = this;
@@ -462,33 +475,32 @@ export default class Display
 
             if (eventKey.length === 1 && /^[a-zA-Z\u0590-\u05FF]$/.test(eventKey)) 
             {
-                gridElement.text.textContent = eventKey;
-                that.storageContext?.setLetter(that.clickContext.activeCoordinate, gridElement.text.textContent);
+                that.setGridText(gridElement.text, eventKey);
                 that.clickContext.activeCoordinate = that.nextCoordinate(that.clickContext.activeCoordinate);
                 that.highlightDefinition(that.clickContext.activeCoordinate);
             }
             else if (eventKey === "Backspace")
             {
-                gridElement.text.textContent = '';
-                that.storageContext?.setLetter(that.clickContext.activeCoordinate, gridElement.text.textContent);
+                that.setGridText(gridElement.text, "");
                 that.clickContext.activeCoordinate = that.prevCoordinate(that.clickContext.activeCoordinate);
                 that.highlightDefinition(that.clickContext.activeCoordinate);
             }
             else if (eventKey == "Delete")
             {
-                gridElement.text.textContent = '';
-                that.storageContext?.setLetter(that.clickContext.activeCoordinate, gridElement.text.textContent);
+                that.setGridText(gridElement.text, "");
             }
             event.stopImmediatePropagation();
             
         };
 
         document.body.addEventListener("keyup", eventListener);
+        /*
         Array.from(document.getElementsByClassName("dummy_input")).forEach(
             (element, index, array) => {
                 (element as HTMLInputElement).addEventListener("keyup", eventListener);
             }
         );
+        */
     }
 
     public showIndex(indexInfo: IndexdInfo) : void
