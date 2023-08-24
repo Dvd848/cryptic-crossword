@@ -94,7 +94,8 @@ h2 {
 }
 
 #crosswordSelect {
-    width: 60%;
+    width: 600px;
+    height: 80px;
     margin: 20px auto;
 }
 

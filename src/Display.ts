@@ -548,6 +548,7 @@ export default class Display
         populateSelect(sortedCrosswordIds);
 
         document.getElementById("chooseCrossword")?.addEventListener("click", handleButtonClick);
+        document.getElementById("crosswordSelect")?.addEventListener("change", handleButtonClick);
         document.getElementById("index")!.classList.remove("hide");
         document.getElementById("loader")?.remove();
     }
