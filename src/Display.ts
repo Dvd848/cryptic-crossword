@@ -12,7 +12,8 @@ type CrosswordPuzzleInfo = {
         down: { [id: string]: string };
         across: { [id: string]: string };
     };
-    sol_hash: string;
+    sol_hash: string | undefined;
+    sol_grid: string[][] | undefined;
 };
 
 type IndexdInfo = {
@@ -143,6 +144,7 @@ export default class Display
     private storageContext : StorageContext | null = null;
 
     private readonly TILE_DIMENSIONS = 40;
+    private readonly BLOCKED_TILE = '#';
 
     constructor()
     {
@@ -194,6 +196,8 @@ export default class Display
         }
         else
         {
+            // Solution hash
+
             const digestMessage = async function (message: string) {
                 const leftPad = (s: string, c: string, n: number) => c.repeat(n - s.length) + s;
                 const msgUint8 = new TextEncoder().encode(message); // encode as (utf-8) Uint8Array
@@ -216,7 +220,7 @@ export default class Display
                 {
                     for (let col = 0; col < puzzleInfo.dimensions.columns; ++col)
                     {
-                        current_sol += that.grid[row][col]?.text.textContent || "";
+                        current_sol += that.grid[row][col]?.text.textContent || this.BLOCKED_TILE;
                     }
                 }
 
@@ -229,14 +233,35 @@ export default class Display
                     modalHeader.classList.add("success");
                     modalHeader.classList.remove("failure");
                 }
-                else{
+                else
+                {
                     modalMessage.innerHTML = "<h4>לא בדיוק...</h4><p>אתם עדיין לא שם, נסו שוב.</p>";
+                    
                     modalHeader.classList.add("failure");
                     modalHeader.classList.remove("success");
+                    if (typeof (puzzleInfo.sol_grid) !== 'undefined')
+                    {
+                        const showSolutionButton = document.createElement("button");
+                        showSolutionButton.textContent = "צפייה בפתרון";
+                        showSolutionButton.classList.add("btn", "btn-danger");
+                        showSolutionButton.addEventListener("click", () => {
+                            const showSolutionModal = new bootstrap.Modal(document.getElementById("fullSolutionModal")!, {});
+                            modal.hide();
+                            showSolutionModal.show();
+                        });
+                        modalMessage.appendChild(showSolutionButton);
+                    }
                 }
                 modal.show();
             })
             document.getElementById("checkSolutionWrapper")!.appendChild(button);
+
+            // Full solution
+
+            if (typeof (puzzleInfo.sol_grid) !== 'undefined')
+            {
+                document.getElementById("fullSolution")?.appendChild(this.createPuzzleSvg(puzzleInfo, true));
+            }
         }
     }
 
@@ -279,18 +304,31 @@ export default class Display
         return container;
     }
 
-    private createPuzzleSvg(puzzleInfo: CrosswordPuzzleInfo) : SVGElement {
-        
+    private createPuzzleSvg(puzzleInfo: CrosswordPuzzleInfo, isSolution = false) : SVGElement 
+    {
+        const that = this;
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 
         svg.setAttribute("width", `${this.TILE_DIMENSIONS * puzzleInfo.dimensions.columns}`);
         svg.setAttribute("height", `${this.TILE_DIMENSIONS * puzzleInfo.dimensions.rows}`);
 
-        this.grid = new Array(puzzleInfo.dimensions.rows);
+        if (isSolution && typeof(puzzleInfo.sol_grid) == "undefined")
+        {
+            throw new Error("No solution exists");
+        }
+
+        if (!isSolution)
+        {
+            this.grid = new Array(puzzleInfo.dimensions.rows);
+        }
 
         for (let row = 0; row < puzzleInfo.dimensions.rows; ++row)
         {
-            this.grid[row] = [];
+            if (!isSolution)
+            {
+                this.grid[row] = [];
+            }
+
             for (let col = 0; col < puzzleInfo.dimensions.columns; ++col)
             {
                 let gridElement : GridElement | null = null;
@@ -306,11 +344,12 @@ export default class Display
                 rect.setAttribute("fill", "white");
                 group.appendChild(rect);
                 
-                if (puzzleInfo.grid[row][col] == "#")
+                if (puzzleInfo.grid[row][col] == this.BLOCKED_TILE)
                 {
                     rect.setAttribute("fill", "black");
                 }
-                else {
+                else 
+                {
                     if (puzzleInfo.grid[row][col] != "")
                     {
                         const clue_id = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -329,16 +368,26 @@ export default class Display
                     letter.setAttribute("fill", "black");
                     group.appendChild(letter);
                     gridElement = {rect: rect, text: letter};
-                    letter.addEventListener("click", function(){that.handleRectClick(row, col);});
+                    
 
-                    this.setGridText(letter, this.storageContext!.getLetter({row: row, col: col}));
+                    if (!isSolution)
+                    {
+                        letter.addEventListener("click", function(){that.handleRectClick(row, col);});
+                        this.setGridText(letter, this.storageContext!.getLetter({row: row, col: col}));
+                    }
+                    else
+                    {
+                        letter.textContent = puzzleInfo.sol_grid![row][col];
+                    }
                 }
                 
                 svg.appendChild(group);
-                this.grid[row][col] = gridElement;
 
-                const that = this;
-                rect.addEventListener("click", function(){that.handleRectClick(row, col);});
+                if (!isSolution)
+                {
+                    this.grid[row][col] = gridElement;
+                    rect.addEventListener("click", function(){that.handleRectClick(row, col);});
+                }
             }
         }
 

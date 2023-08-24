@@ -126,18 +126,33 @@
 
     <div class="modal" id="solutionModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-            <div class="modal-header">
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="solutionMessage">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">סגירה</button>
+                </div>
             </div>
-            <div class="modal-body" id="solutionMessage">
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">סגירה</button>
-            </div>
-          </div>
         </div>
-      </div>
+    </div>
+
+    <div class="modal fade" id="fullSolutionModal" tabindex="-1" aria-labelledby="fullSolutionLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title fs-5" id="fullSolutionLabel">פתרון</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="fullSolution"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">סגירה</button>
+                </div>
+            </div>
+        </div>
+    </div>
       
       
 

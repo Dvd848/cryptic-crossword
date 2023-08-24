@@ -115,3 +115,11 @@ h2 {
 #solutionModal .modal-body {
     text-align: center;
 }
+
+#fullSolutionModal .modal-dialog {
+    max-width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+  
