@@ -169,8 +169,21 @@ export default class Display
         this.clues_vertical.appendChild(this.createClues("down", puzzleInfo));
         this.setupCheckSolution(puzzleInfo);
 
+        this.setTitle(`תשבץ אינטל ${puzzleInfo.id}`)
+
         document.getElementById("wrapper")!.classList.remove("hide");
         document.getElementById("loader")?.remove();
+    }
+
+    private setTitle(title: string)
+    {
+        const sep = ' | '
+        let newTitle = document.title.substring(document.title.indexOf(sep));
+        if (title != "")
+        {
+            newTitle += sep + title;
+        }
+        document.title = newTitle;
     }
 
     private setupCheckSolution(puzzleInfo: CrosswordPuzzleInfo)
@@ -505,23 +518,7 @@ export default class Display
 
     public showIndex(indexInfo: IndexdInfo) : void
     {
-        /*
-        const crossword_list = document.getElementById("crossword_list")!;
-        for (let id of indexInfo.ids)
-        {
-            let li = document.createElement("li");
-            let a = document.createElement("a");
-            a.textContent = `תשבץ ${id}`;
-            a.setAttribute("href", `?id=${id}`);
-            li.appendChild(a);
-            crossword_list.appendChild(li);
-        
-        }
-
-        document.getElementById("index")!.classList.remove("hide");
-        document.getElementById("loader")?.remove();
-        */
-
+        this.setTitle("");
         const sortNumbers = function(ids: number[]): number[] 
         {
             return ids.slice().sort((a, b) => b - a);
