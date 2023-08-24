@@ -6,7 +6,7 @@ on:
     paths:
       - 'src/**'
 jobs:
-  generate-and-submit:
+  generate-bundle-and-submit:
     runs-on: ubuntu-latest
 
     steps:
