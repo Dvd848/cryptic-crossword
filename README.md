@@ -69,12 +69,12 @@ This should happen automatically with a GitHub Action.
 The original crossword puzzles are published as a `docx` file and need to be converted to `json` format before being uploaded to this website.
 
  1. Download the new crossword puzzle from [pinatkafe.com](https://pinatkafe.com/%d7%aa%d7%a9%d7%91%d7%a6%d7%99-%d7%94%d7%92%d7%99%d7%95%d7%9f/)
-   a. Note: If the `docx` with the solution is selected, the solutions will extracted from the document and made available via the website as well
+    1. Note: If the `docx` with the solution is selected, the solutions will extracted from the document and made available via the website as well
  2. Place it under `./tmp/docs/`
  3. Run `./utils/doc2json/doc2json.py` directly or via the docker (`docker-compose run --rm doc2json`)
-   a. This will automatically convert the `docx` format to `json` and place the result under `./crosswords/<crossword_id>.json`
+    1. This will automatically convert the `docx` format to `json` and place the result under `./crosswords/<crossword_id>.json`
  4. Run `./utils/create_index/create_index.py` to update `./index.json` with the new puzzle ID
-   a. When pushing to GitHub, this should happen automatically with a GitHub Action
+    1. When pushing to GitHub, this should happen automatically with a GitHub Action
 
 ## Contributions
 
