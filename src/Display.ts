@@ -532,7 +532,17 @@ export default class Display
 
     private setGridText(textElement: SVGTextElement, letter: string) : void
     {
-        textElement.setAttribute("fill", /^[a-zA-Zםףץךן]$/.test(letter) ? "red" : "black");
+        const translation: Record<string, string> = {
+            'ם': 'מ',
+            'ן': 'נ',
+            'ף': 'פ',
+            'ץ': 'צ',
+            'ך': 'כ',
+        }
+        textElement.setAttribute("fill", /^[a-zA-Z]$/.test(letter) ? "red" : "black");
+        if (letter in translation) {
+            letter = translation[letter];
+        }
         textElement.textContent = letter;
         this.storageContext?.setLetter(this.clickContext.activeCoordinate, letter);
     }
@@ -561,7 +571,7 @@ export default class Display
                 return;
             }
 
-            if (eventKey.length === 1 && /^[a-zA-Z\u0590-\u05FF]$/.test(eventKey)) 
+            if (eventKey.length === 1 && /^[a-z\u0590-\u05FF]$/.test(eventKey)) 
             {
                 that.setGridText(gridElement.text, eventKey);
                 that.clickContext.activeCoordinate = that.nextCoordinate(that.clickContext.activeCoordinate);
