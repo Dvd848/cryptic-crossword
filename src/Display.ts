@@ -580,7 +580,11 @@ export default class Display
             else if (eventKey === "Backspace")
             {
                 that.setGridText(gridElement.text, "");
-                that.clickContext.activeCoordinate = that.prevCoordinate(that.clickContext.activeCoordinate);
+                const prevCoord = that.prevCoordinate(that.clickContext.activeCoordinate);
+                if (prevCoord != null)
+                {
+                    that.clickContext.activeCoordinate = prevCoord;
+                }
                 that.highlightDefinition(that.clickContext.activeCoordinate);
             }
             else if (eventKey == "Delete")
