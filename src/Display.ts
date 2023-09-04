@@ -27,7 +27,13 @@ type Coordinate = {
 
 type GridElement = {
     rect: SVGRectElement,
-    text: SVGTextElement
+    text: SVGTextElement,
+    clue_id: number | null
+}
+
+type ClueData = {
+    gridElement: GridElement,
+    directions: Direction[]
 }
 
 enum Direction {
@@ -142,6 +148,7 @@ export default class Display
         direction : Direction.Horizontal
     };
     private storageContext : StorageContext | null = null;
+    private clues: Record<number, ClueData> = {};
 
     private readonly TILE_DIMENSIONS = 40;
     private readonly BLOCKED_TILE = '#';
@@ -157,6 +164,8 @@ export default class Display
 
     showCrossword(puzzleInfo: CrosswordPuzzleInfo) : void
     {
+        this.clues = {};
+
         document.getElementById("title")!.textContent = `תשבץ אינטל ${puzzleInfo.id}`;
         document.getElementById("author")!.textContent = `${puzzleInfo.author}`;
         this.crossword.innerHTML = '';
@@ -167,8 +176,10 @@ export default class Display
 
         this.crossword.appendChild(this.createPuzzleSvg(puzzleInfo));
         this.crossword.appendChild(this.createDummyInputGrid(puzzleInfo.dimensions.rows, puzzleInfo.dimensions.columns));
+
         this.clues_horizontal.appendChild(this.createClues("across", puzzleInfo));
         this.clues_vertical.appendChild(this.createClues("down", puzzleInfo));
+
         this.setupCheckSolution(puzzleInfo);
 
         this.setTitle(`תשבץ אינטל ${puzzleInfo.id}`)
@@ -267,6 +278,7 @@ export default class Display
 
     private createClues(direction: "across" | "down", puzzleInfo: CrosswordPuzzleInfo) : HTMLDListElement
     {
+        
         const dl : HTMLDListElement = document.createElement("dl");
         for (const id in puzzleInfo.definitions[direction])
         {
@@ -276,6 +288,8 @@ export default class Display
             dd.textContent = `${puzzleInfo.definitions[direction][id]}`;
             dl.appendChild(dt);
             dl.appendChild(dd);
+
+            this.clues[parseInt(id)].directions.push({"across": Direction.Horizontal, "down": Direction.Vertical}[direction]);
         }
 
         return dl;
@@ -350,34 +364,42 @@ export default class Display
                 }
                 else 
                 {
+                    let clue_id = null;
                     if (puzzleInfo.grid[row][col] != "")
                     {
-                        const clue_id = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                        clue_id.setAttribute("x", `${col * this.TILE_DIMENSIONS + this.TILE_DIMENSIONS - 4}`);
-                        clue_id.setAttribute("y", `${row * this.TILE_DIMENSIONS + 12}`);
-                        clue_id.setAttribute("style", "fill: black; font-size: 10px;");
-                        clue_id.textContent = puzzleInfo.grid[row][col];
-                        group.appendChild(clue_id);
+                        const clue_id_elem = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                        clue_id_elem.setAttribute("x", `${col * this.TILE_DIMENSIONS + this.TILE_DIMENSIONS - 4}`);
+                        clue_id_elem.setAttribute("y", `${row * this.TILE_DIMENSIONS + 12}`);
+                        clue_id_elem.setAttribute("style", "fill: black; font-size: 10px;");
+                        clue_id_elem.textContent = puzzleInfo.grid[row][col];
+                        group.appendChild(clue_id_elem);
+
+                        clue_id = parseInt(puzzleInfo.grid[row][col]);
                     }
 
-                    const letter = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    letter.setAttribute("x", `${col * this.TILE_DIMENSIONS + (this.TILE_DIMENSIONS / 2)}`);
-                    letter.setAttribute("y", `${row * this.TILE_DIMENSIONS + (this.TILE_DIMENSIONS - (this.TILE_DIMENSIONS / 4))}`);
-                    letter.setAttribute("text-anchor", "middle");
-                    letter.setAttribute("style", "font-size: 30px;");
-                    letter.setAttribute("fill", "black");
-                    group.appendChild(letter);
-                    gridElement = {rect: rect, text: letter};
+                    const letter_elem = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    letter_elem.setAttribute("x", `${col * this.TILE_DIMENSIONS + (this.TILE_DIMENSIONS / 2)}`);
+                    letter_elem.setAttribute("y", `${row * this.TILE_DIMENSIONS + (this.TILE_DIMENSIONS - (this.TILE_DIMENSIONS / 4))}`);
+                    letter_elem.setAttribute("text-anchor", "middle");
+                    letter_elem.setAttribute("style", "font-size: 30px;");
+                    letter_elem.setAttribute("fill", "black");
+                    group.appendChild(letter_elem);
+                    gridElement = {rect: rect, text: letter_elem, clue_id: clue_id};
                     
 
                     if (!isSolution)
                     {
-                        letter.addEventListener("click", function(){that.handleRectClick(row, col);});
-                        this.setGridText(letter, this.storageContext!.getLetter({row: row, col: col}));
+                        letter_elem.addEventListener("click", function(){that.handleRectClick(row, col);});
+                        this.setGridText(letter_elem, this.storageContext!.getLetter({row: row, col: col}));
+
+                        if (clue_id != null)
+                        {
+                            this.clues[clue_id] = {gridElement: gridElement, directions: []};
+                        }
                     }
                     else
                     {
-                        letter.textContent = puzzleInfo.sol_grid![row][col];
+                        letter_elem.textContent = puzzleInfo.sol_grid![row][col];
                     }
                 }
                 
@@ -499,6 +521,10 @@ export default class Display
         if (JSON.stringify(this.clickContext.previousCoordinate) == JSON.stringify(this.clickContext.activeCoordinate))
         {
             this.swapDirection();
+        }
+        else if (gridElement.clue_id != null && gridElement.clue_id in this.clues && this.clues[gridElement.clue_id].directions.length == 1)
+        {
+            this.clickContext.direction = this.clues[gridElement.clue_id].directions[0];
         }
 
         this.highlightDefinition({row: row, col: col});
