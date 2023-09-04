@@ -49,6 +49,7 @@ h2 {
 .clues dd {
     grid-column-start: 3;
     padding-right: 10px;
+    cursor: pointer;
 }
 
 #index {

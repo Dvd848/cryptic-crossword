@@ -32,7 +32,7 @@ type GridElement = {
 }
 
 type ClueData = {
-    gridElement: GridElement,
+    coordinate: Coordinate,
     directions: Direction[]
 }
 
@@ -276,20 +276,26 @@ export default class Display
         }
     }
 
-    private createClues(direction: "across" | "down", puzzleInfo: CrosswordPuzzleInfo) : HTMLDListElement
+    private createClues(directionStr: "across" | "down", puzzleInfo: CrosswordPuzzleInfo) : HTMLDListElement
     {
-        
+        const that = this;
         const dl : HTMLDListElement = document.createElement("dl");
-        for (const id in puzzleInfo.definitions[direction])
+        for (const id in puzzleInfo.definitions[directionStr])
         {
+            const int_id = parseInt(id);
+            const direction : Direction = {"across": Direction.Horizontal, "down": Direction.Vertical}[directionStr];
             const dt = document.createElement("dt");
             dt.textContent = `[${id}]`;
             const dd = document.createElement("dd");
-            dd.textContent = `${puzzleInfo.definitions[direction][id]}`;
+            dd.textContent = `${puzzleInfo.definitions[directionStr][id]}`;
             dl.appendChild(dt);
             dl.appendChild(dd);
 
-            this.clues[parseInt(id)].directions.push({"across": Direction.Horizontal, "down": Direction.Vertical}[direction]);
+            dd.addEventListener("click", (event) => {
+                that.highlightDefinitionById(int_id, direction);
+            });
+
+            this.clues[int_id].directions.push(direction);
         }
 
         return dl;
@@ -394,7 +400,7 @@ export default class Display
 
                         if (clue_id != null)
                         {
-                            this.clues[clue_id] = {gridElement: gridElement, directions: []};
+                            this.clues[clue_id] = {coordinate: {row: row, col: col}, directions: []};
                         }
                     }
                     else
@@ -467,7 +473,13 @@ export default class Display
         return (this.isCoordFree(new_coord) ? new_coord : null);
     }
 
-    private highlightDefinition(coordinate: Coordinate | null) : void 
+    private highlightDefinitionById(id: number, direction: Direction) : void
+    {
+        this.clickContext.direction = direction;
+        this.highlightDefinitionByCoordinate(this.clues[id].coordinate);
+    }
+
+    private highlightDefinitionByCoordinate(coordinate: Coordinate | null) : void 
     {
         let nextCoord : Coordinate | null = null;
         let gridElement : GridElement | null = null;
@@ -527,7 +539,7 @@ export default class Display
             this.clickContext.direction = this.clues[gridElement.clue_id].directions[0];
         }
 
-        this.highlightDefinition({row: row, col: col});
+        this.highlightDefinitionByCoordinate({row: row, col: col});
     }
 
     private setGridText(textElement: SVGTextElement, letter: string) : void
@@ -575,7 +587,7 @@ export default class Display
             {
                 that.setGridText(gridElement.text, eventKey);
                 that.clickContext.activeCoordinate = that.nextCoordinate(that.clickContext.activeCoordinate);
-                that.highlightDefinition(that.clickContext.activeCoordinate);
+                that.highlightDefinitionByCoordinate(that.clickContext.activeCoordinate);
             }
             else if (eventKey === "Backspace")
             {
@@ -585,7 +597,7 @@ export default class Display
                 {
                     that.clickContext.activeCoordinate = prevCoord;
                 }
-                that.highlightDefinition(that.clickContext.activeCoordinate);
+                that.highlightDefinitionByCoordinate(that.clickContext.activeCoordinate);
             }
             else if (eventKey == "Delete")
             {
