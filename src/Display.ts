@@ -292,7 +292,7 @@ export default class Display
             dl.appendChild(dd);
 
             dd.addEventListener("click", (event) => {
-                that.highlightDefinitionById(int_id, direction);
+                that.selectDefinitionById(int_id, direction);
             });
 
             this.clues[int_id].directions.push(direction);
@@ -473,10 +473,12 @@ export default class Display
         return (this.isCoordFree(new_coord) ? new_coord : null);
     }
 
-    private highlightDefinitionById(id: number, direction: Direction) : void
+    private selectDefinitionById(id: number, direction: Direction) : void
     {
+        const coordinate = this.clues[id].coordinate;
         this.clickContext.direction = direction;
-        this.highlightDefinitionByCoordinate(this.clues[id].coordinate);
+
+        this.handleRectClick(coordinate.row, coordinate.col, true);
     }
 
     private highlightDefinitionByCoordinate(coordinate: Coordinate | null) : void 
@@ -519,7 +521,7 @@ export default class Display
         document.getElementById(`dummy_input_r${coordinate.row}_c${coordinate.col}`)?.focus();
     }
 
-    private handleRectClick(row: number, col: number) : void
+    private handleRectClick(row: number, col: number, force_direction: boolean = false) : void
     {
         const gridElement = this.grid[row][col];
         if (gridElement == null)
@@ -530,14 +532,21 @@ export default class Display
         this.clickContext.previousCoordinate = this.clickContext.activeCoordinate;
         this.clickContext.activeCoordinate = {row: row, col: col};
 
-        if (JSON.stringify(this.clickContext.previousCoordinate) == JSON.stringify(this.clickContext.activeCoordinate))
+        if (!force_direction)
         {
-            this.swapDirection();
+            if (JSON.stringify(this.clickContext.previousCoordinate) == JSON.stringify(this.clickContext.activeCoordinate))
+            {
+                // User is clicking the same tile to swap directions
+                this.swapDirection();
+            }
+            else if (gridElement.clue_id != null && gridElement.clue_id in this.clues && this.clues[gridElement.clue_id].directions.length == 1)
+            {
+                // User is clicking a tile which is the beginning of a definition, 
+                // assume the purpose is to move in the direction of the definition
+                this.clickContext.direction = this.clues[gridElement.clue_id].directions[0];
+            }
         }
-        else if (gridElement.clue_id != null && gridElement.clue_id in this.clues && this.clues[gridElement.clue_id].directions.length == 1)
-        {
-            this.clickContext.direction = this.clues[gridElement.clue_id].directions[0];
-        }
+        // else: Explicit ask for current direction to remain
 
         this.highlightDefinitionByCoordinate({row: row, col: col});
     }
