@@ -19,19 +19,11 @@ jobs:
 
       - name: Run autogeneration script
         run: python ./utils/create_index/create_index.py
-        
-      - name: Check for changes
-        id: check_changes
+
+      - name: Commit changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .
           git diff-index --quiet HEAD || git commit -m "Auto-generate crossword index"
-
-      - name: Push changes
-        if: steps.check_changes.outputs.return-code == '0'
-          run: |
-            echo "No changes to commit. Exiting with success."
-        else:
-          run: |
-            git push
+          git push
