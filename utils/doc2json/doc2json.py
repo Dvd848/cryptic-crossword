@@ -70,25 +70,24 @@ def process_crossword(path, out_dir):
         if line == "":
             continue
 
-        match state:
-            case State.READ_CROSSWORD_ID:
-                crossword[state.value] = int(REGEX_CROSSWORD_ID.findall(line)[0])
-                state = State.READ_AUTHOR
-            case State.READ_AUTHOR:
-                crossword[state.value] = line
-                state = State.READ_DOWN_TITLE
-            case State.READ_DOWN_TITLE:
-                assert(line == "מאונך")
-                state = State.READ_DOWN_DEFINITIONS
-            case State.READ_DOWN_DEFINITIONS | State.READ_ACROSS_DEFINITIONS:
-                if line == "מאוזן":
-                    state = State.READ_ACROSS_DEFINITIONS
-                else:
-                    match = re.search(REGEX_DEFINITION, line)
-                    if match:
-                        number = int(match.group(1))
-                        text = match.group(2)
-                    crossword["definitions"][state.value][number] = text
+        if state == State.READ_CROSSWORD_ID:
+            crossword[state.value] = int(REGEX_CROSSWORD_ID.findall(line)[0])
+            state = State.READ_AUTHOR
+        elif state == State.READ_AUTHOR:
+            crossword[state.value] = line
+            state = State.READ_DOWN_TITLE
+        elif state == State.READ_DOWN_TITLE:
+            assert(line == "מאונך")
+            state = State.READ_DOWN_DEFINITIONS
+        elif (state == State.READ_DOWN_DEFINITIONS) or (state == State.READ_ACROSS_DEFINITIONS):
+            if line == "מאוזן":
+                state = State.READ_ACROSS_DEFINITIONS
+            else:
+                match = re.search(REGEX_DEFINITION, line)
+                if match:
+                    number = int(match.group(1))
+                    text = match.group(2)
+                crossword["definitions"][state.value][number] = text
     assert(state == State.READ_ACROSS_DEFINITIONS)
 
     assert(len(document.tables) == 1)
