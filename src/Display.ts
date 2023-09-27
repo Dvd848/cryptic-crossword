@@ -284,8 +284,13 @@ export default class Display
         {
             const int_id = parseInt(id);
             const direction : Direction = {"across": Direction.Horizontal, "down": Direction.Vertical}[directionStr];
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.classList.add("clue_checkbox");
+
             const dt = document.createElement("dt");
-            dt.textContent = `[${id}]`;
+            dt.appendChild(checkbox);
+            dt.appendChild(document.createTextNode(`[${id}]`));
             const dd = document.createElement("dd");
             dd.textContent = `${puzzleInfo.definitions[directionStr][id]}`;
             dl.appendChild(dt);
@@ -293,6 +298,14 @@ export default class Display
 
             dd.addEventListener("click", (event) => {
                 that.selectDefinitionById(int_id, direction);
+            });
+
+            checkbox.addEventListener("change", () => {
+                if (checkbox.checked) {
+                    dd.classList.add("solved");
+                } else {
+                    dd.classList.remove("solved");
+                }
             });
 
             this.clues[int_id].directions.push(direction);
