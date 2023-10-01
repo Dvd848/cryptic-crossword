@@ -153,6 +153,7 @@ class StorageContext
         }
         catch (err)
         {
+            console.log(err);
             let arr = Array.from({ length: this.rows }, () => this.EMPTY_CHAR.repeat(this.cols));
             return this.generateContext(arr);
         }

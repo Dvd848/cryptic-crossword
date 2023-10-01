@@ -27,6 +27,7 @@ async function showWebpage()
     }
     catch (err)
     {
+        console.log(err);
         const response = await fetch(`index.json`);
         const json = await response.json()
         display.showIndex(json);
