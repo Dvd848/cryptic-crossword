@@ -1,5 +1,15 @@
 import * as bootstrap from 'bootstrap';
 
+declare global {
+    interface String {
+        replaceAt(index: number, replacement: string): string;
+    }
+}
+
+String.prototype.replaceAt = function(index, replacement) {
+    return this.substring(0, index) + replacement + this.substring(index + replacement.length);
+};
+
 type CrosswordPuzzleInfo = {
     id: number;
     author: string;
@@ -47,42 +57,62 @@ type ClickContext = {
     direction : Direction
 }
 
+type StorageContextStruct = {
+    input : string[][],
+    solved_clues : {
+        "across": string,
+        "down": string
+    }
+    version: string
+}
+
 class StorageContext
 {
     private crossword_id : number;
+
     private rows : number;
     private cols : number;
-    private user_input : string[][];
+
+    private num_clues_across : number;
+    private num_clues_down : number;
+
+    private context : StorageContextStruct;
     private local_storage_key : string;
 
     private readonly LOCAL_STORAGE_VCN_KEY = "VCN";
     private readonly LOCAL_STORAGE_VCN_VAL = "1";
+    private readonly LOCAL_STORAGE_STRUCT_VERSION = "2";
     private readonly LOCAL_STORAGE_KEY_PREFIX = "crossword_";
 
-    constructor(crossword_id: number, rows: number, cols: number)
+    constructor(crossword_id: number, rows: number, cols: number, 
+                max_clues_across: number, max_clues_down: number)
     {
         this.crossword_id = crossword_id;
         this.rows = rows;
         this.cols = cols;
-
+        this.num_clues_across = max_clues_across + 1;
+        this.num_clues_down = max_clues_down + 1; 
+        
         this.local_storage_key = this.LOCAL_STORAGE_KEY_PREFIX + crossword_id.toString();
-
+        
         this.localStorageInit();
-
-        this.user_input = this.loadInput();
+        
+        this.context = this.loadContext();
     }
 
     private localStorageInit()
     {
         const current_vcn = localStorage.getItem(this.LOCAL_STORAGE_VCN_KEY);
+        
         if (current_vcn != this.LOCAL_STORAGE_VCN_VAL)
         {
             localStorage.clear();
+            
         }
         localStorage.setItem(this.LOCAL_STORAGE_VCN_KEY, this.LOCAL_STORAGE_VCN_VAL);
     }
 
-    private loadInput()
+    private loadContext()
     {
         const input = localStorage.getItem(this.local_storage_key);
 
@@ -93,18 +123,45 @@ class StorageContext
                 throw new Error("No previous input");
             }
 
-            const input_arr = JSON.parse(input);
+            let context = JSON.parse(input);
+            if (Array.isArray(context))
+            {
+                // Migrate from legacy format
+                context = this.generateContext(context);
+            }
+            const input_arr = context["input"];
             if (input_arr.length != this.rows || input_arr[0].length != this.cols)
             {
                 throw new Error("Invalid input");
             }
 
-            return input_arr;
+            if ( 
+                (context["solved_clues"]["across"].length != this.num_clues_across)
+                ||
+                (context["solved_clues"]["down"].length != this.num_clues_down)
+            )
+            {
+                throw new Error("Invalid input: Solved clues");
+            }
+
+            return context;
         }
         catch (err)
         {
-            return Array.from({ length: this.rows }, () => Array.from({ length: this.cols }, () => ""));
+            let arr = Array.from({ length: this.rows }, () => Array.from({ length: this.cols }, () => ""));
+            return this.generateContext(arr);
         }
+    }
+
+    private generateContext(input: string[][]) : StorageContextStruct {
+        return {
+            "input": input, 
+            "solved_clues": {
+                "across": "0".repeat(this.num_clues_across),
+                "down": "0".repeat(this.num_clues_down)
+            },
+            "version": this.LOCAL_STORAGE_STRUCT_VERSION
+        };
     }
 
     public getLetter(coordinate: Coordinate) : string
@@ -115,7 +172,7 @@ class StorageContext
             throw new Error("Invalid input for getLetter!");
         }
 
-        return this.user_input[coordinate.row][coordinate.col];
+        return this.context["input"][coordinate.row][coordinate.col];
     }
 
     public setLetter(coordinate: Coordinate | null, letter: string) : void
@@ -131,8 +188,18 @@ class StorageContext
             throw new Error("Invalid input for setLetter!");
         }
 
-        this.user_input[coordinate.row][coordinate.col] = letter;
-        localStorage.setItem(this.local_storage_key, JSON.stringify(this.user_input));
+        this.context["input"][coordinate.row][coordinate.col] = letter;
+        localStorage.setItem(this.local_storage_key, JSON.stringify(this.context));
+    }
+
+    public setClueSolved(clueId: number, direction: "down" | "across", solved: boolean) {
+        this.context["solved_clues"][direction] 
+            = this.context["solved_clues"][direction].replaceAt(clueId - 1, Number(solved).toString());
+        localStorage.setItem(this.local_storage_key, JSON.stringify(this.context));
+    }
+
+    public getClueSolved(clueId: number, direction: "down" | "across") : boolean {
+        return this.context["solved_clues"][direction].charAt(clueId - 1) == Number(true).toString();
     }
 }
 
@@ -172,7 +239,13 @@ export default class Display
         this.clues_horizontal.innerHTML = '<h3>מאוזן</h3>';
         this.clues_vertical.innerHTML = '<h3>מאונך</h3>';
 
-        this.storageContext = new StorageContext(puzzleInfo.id, puzzleInfo.dimensions.rows, puzzleInfo.dimensions.columns);
+        const getMaxId = (x: { [id: string]: string }) => Math.max(...Object.keys(x).map(id => parseInt(id, 10)));
+
+        this.storageContext = new StorageContext(puzzleInfo.id, 
+                                                 puzzleInfo.dimensions.rows, 
+                                                 puzzleInfo.dimensions.columns,
+                                                 getMaxId(puzzleInfo.definitions.across),
+                                                 getMaxId(puzzleInfo.definitions.down));
 
         this.crossword.appendChild(this.createPuzzleSvg(puzzleInfo));
         this.crossword.appendChild(this.createDummyInputGrid(puzzleInfo.dimensions.rows, puzzleInfo.dimensions.columns));
@@ -303,10 +376,17 @@ export default class Display
             checkbox.addEventListener("change", () => {
                 if (checkbox.checked) {
                     dd.classList.add("solved");
+                    that.storageContext?.setClueSolved(int_id, directionStr, true);
                 } else {
                     dd.classList.remove("solved");
                 }
+                that.storageContext?.setClueSolved(int_id, directionStr, checkbox.checked);
             });
+
+            if (that.storageContext?.getClueSolved(int_id, directionStr))
+            {
+                checkbox.click();
+            }
 
             this.clues[int_id].directions.push(direction);
         }
