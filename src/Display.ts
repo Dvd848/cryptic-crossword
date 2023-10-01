@@ -58,7 +58,7 @@ type ClickContext = {
 }
 
 type StorageContextStruct = {
-    input : string[][],
+    input : string[],
     solved_clues : {
         "across": string,
         "down": string
@@ -83,6 +83,8 @@ class StorageContext
     private readonly LOCAL_STORAGE_VCN_VAL = "1";
     private readonly LOCAL_STORAGE_STRUCT_VERSION = "2";
     private readonly LOCAL_STORAGE_KEY_PREFIX = "crossword_";
+
+    private readonly EMPTY_CHAR = "?";
 
     constructor(crossword_id: number, rows: number, cols: number, 
                 max_clues_across: number, max_clues_down: number)
@@ -127,6 +129,9 @@ class StorageContext
             if (Array.isArray(context))
             {
                 // Migrate from legacy format
+                context = context.map((innerArray: string[]) =>
+                    innerArray.map((str: string) => str === "" ? this.EMPTY_CHAR : str).join("")
+                );
                 context = this.generateContext(context);
             }
             const input_arr = context["input"];
@@ -148,12 +153,12 @@ class StorageContext
         }
         catch (err)
         {
-            let arr = Array.from({ length: this.rows }, () => Array.from({ length: this.cols }, () => ""));
+            let arr = Array.from({ length: this.rows }, () => this.EMPTY_CHAR.repeat(this.cols));
             return this.generateContext(arr);
         }
     }
 
-    private generateContext(input: string[][]) : StorageContextStruct {
+    private generateContext(input: string[]) : StorageContextStruct {
         return {
             "input": input, 
             "solved_clues": {
@@ -172,7 +177,8 @@ class StorageContext
             throw new Error("Invalid input for getLetter!");
         }
 
-        return this.context["input"][coordinate.row][coordinate.col];
+        const res = this.context["input"][coordinate.row].charAt(coordinate.col);
+        return res == this.EMPTY_CHAR ? "" : res;
     }
 
     public setLetter(coordinate: Coordinate | null, letter: string) : void
@@ -188,7 +194,8 @@ class StorageContext
             throw new Error("Invalid input for setLetter!");
         }
 
-        this.context["input"][coordinate.row][coordinate.col] = letter;
+        this.context["input"][coordinate.row] 
+            = this.context["input"][coordinate.row].replaceAt(coordinate.col, letter == "" ? this.EMPTY_CHAR : letter);
         localStorage.setItem(this.local_storage_key, JSON.stringify(this.context));
     }
 
@@ -241,11 +248,13 @@ export default class Display
 
         const getMaxId = (x: { [id: string]: string }) => Math.max(...Object.keys(x).map(id => parseInt(id, 10)));
 
+        
         this.storageContext = new StorageContext(puzzleInfo.id, 
-                                                 puzzleInfo.dimensions.rows, 
-                                                 puzzleInfo.dimensions.columns,
-                                                 getMaxId(puzzleInfo.definitions.across),
-                                                 getMaxId(puzzleInfo.definitions.down));
+                                                    puzzleInfo.dimensions.rows, 
+                                                    puzzleInfo.dimensions.columns,
+                                                    getMaxId(puzzleInfo.definitions.across),
+                                                    getMaxId(puzzleInfo.definitions.down));
+        
 
         this.crossword.appendChild(this.createPuzzleSvg(puzzleInfo));
         this.crossword.appendChild(this.createDummyInputGrid(puzzleInfo.dimensions.rows, puzzleInfo.dimensions.columns));
@@ -489,7 +498,10 @@ export default class Display
                     if (!isSolution)
                     {
                         letter_elem.addEventListener("click", function(){that.handleRectClick(row, col);});
-                        this.setGridText(letter_elem, this.storageContext!.getLetter({row: row, col: col}));
+                        if (this.storageContext)
+                        {
+                            this.setGridText(letter_elem, this.storageContext.getLetter({row: row, col: col}));
+                        }
 
                         if (clue_id != null)
                         {
