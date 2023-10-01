@@ -54,6 +54,7 @@ h2 {
 
 .clue_checkbox {
     margin-left: 5px;
+    vertical-align: middle;
 }
 
 .clues .solved {
