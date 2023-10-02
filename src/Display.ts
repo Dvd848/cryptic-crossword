@@ -382,6 +382,12 @@ export default class Display
             dd.addEventListener("click", (event) => {
                 that.selectDefinitionById(int_id, direction);
             });
+            
+            if (that.storageContext?.getClueSolved(int_id, directionStr))
+            {
+                checkbox.checked = true;
+                dd.classList.add("solved");
+            }
 
             checkbox.addEventListener("change", () => {
                 if (checkbox.checked) {
@@ -393,10 +399,6 @@ export default class Display
                 that.storageContext?.setClueSolved(int_id, directionStr, checkbox.checked);
             });
 
-            if (that.storageContext?.getClueSolved(int_id, directionStr))
-            {
-                checkbox.click();
-            }
 
             this.clues[int_id].directions.push(direction);
         }
