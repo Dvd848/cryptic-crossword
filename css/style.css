@@ -133,4 +133,24 @@ h2 {
     margin-right: auto;
 }
 
-  
+#crossword_wrapper {
+    width: fit-content;
+    margin: 0 auto;
+}
+
+#tabs_header {
+    width: 100%;
+    border-bottom: none;
+    margin-bottom: 1px;
+}
+
+#tabs_content {
+    width: fit-content;
+    text-align: center;  
+    padding: 0;
+}
+
+.nav-tabs .nav-link {
+    border-color: rgb(206, 205, 205);
+    margin-left: 1px;
+}

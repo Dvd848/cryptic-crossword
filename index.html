@@ -45,8 +45,23 @@
     <div id="wrapper" class="hide">
         <h1 id="title"></h1>
         <h2 id="author"></h2>
-        <div class="row">
-            <div id="crossword" class="col"></div>
+        <div class="row" id="crossword_wrapper">
+            <div>
+                <ul class="nav nav-tabs" id="tabs_header" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#crossword_tab_content" type="button" role="tab" aria-selected="true">תשבץ</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#solution_tab_content" type="button" role="tab" aria-selected="false" tabindex="-1">פתרון</button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="tabs_content">
+                    <div class="tab-pane active show" role="tabpanel" id="crossword_tab_content">
+                        <div id="crossword" class="col"></div>
+                    </div>
+                    <div class="tab-pane show" role="tabpanel" id="solution_tab_content"></div>
+                </div>
+            </div>
         </div>
         <div class="row">
             <div id="clues_horizontal" class="clues col"></div>
@@ -132,21 +147,6 @@
                 </div>
                 <div class="modal-body" id="solutionMessage">
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">סגירה</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="fullSolutionModal" tabindex="-1" aria-labelledby="fullSolutionLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 class="modal-title fs-5" id="fullSolutionLabel">פתרון</h3>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="fullSolution"></div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">סגירה</button>
                 </div>

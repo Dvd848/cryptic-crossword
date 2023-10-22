@@ -256,7 +256,6 @@ export default class Display
                                                     getMaxId(puzzleInfo.definitions.across),
                                                     getMaxId(puzzleInfo.definitions.down));
         
-
         this.crossword.appendChild(this.createPuzzleSvg(puzzleInfo));
         this.crossword.appendChild(this.createDummyInputGrid(puzzleInfo.dimensions.rows, puzzleInfo.dimensions.columns));
 
@@ -270,6 +269,7 @@ export default class Display
         document.getElementById("wrapper")!.classList.remove("hide");
         document.getElementById("loader")?.remove();
     }
+
 
     private setTitle(title: string)
     {
@@ -287,6 +287,7 @@ export default class Display
         if (typeof (puzzleInfo.sol_hash) === 'undefined' || puzzleInfo.sol_hash == "")
         {
             document.getElementById("checkSolutionWrapper")!.innerHTML = "";
+            document.getElementById("tabs_header")?.classList.add("hide");
         }
         else
         {
@@ -333,18 +334,6 @@ export default class Display
                     
                     modalHeader.classList.add("failure");
                     modalHeader.classList.remove("success");
-                    if (typeof (puzzleInfo.sol_grid) !== 'undefined')
-                    {
-                        const showSolutionButton = document.createElement("button");
-                        showSolutionButton.textContent = "צפייה בפתרון";
-                        showSolutionButton.classList.add("btn", "btn-danger");
-                        showSolutionButton.addEventListener("click", () => {
-                            const showSolutionModal = new bootstrap.Modal(document.getElementById("fullSolutionModal")!, {});
-                            modal.hide();
-                            showSolutionModal.show();
-                        });
-                        modalMessage.appendChild(showSolutionButton);
-                    }
                 }
                 modal.show();
             })
@@ -354,7 +343,10 @@ export default class Display
 
             if (typeof (puzzleInfo.sol_grid) !== 'undefined')
             {
-                document.getElementById("fullSolution")?.appendChild(this.createPuzzleSvg(puzzleInfo, true));
+                //document.getElementById("fullSolution")?.appendChild(this.createPuzzleSvg(puzzleInfo, true));
+                const divElement = document.createElement('div');
+                divElement.appendChild(this.createPuzzleSvg(puzzleInfo, true));
+                document.getElementById("solution_tab_content")?.appendChild(divElement);
             }
         }
     }
