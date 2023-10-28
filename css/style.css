@@ -154,3 +154,11 @@ h2 {
     border-color: rgb(206, 205, 205);
     margin-left: 1px;
 }
+
+.bottom_button {
+    margin-bottom: 10px;
+}
+
+#share_link {
+    text-align: left;
+}

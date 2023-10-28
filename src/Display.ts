@@ -1,4 +1,5 @@
 import * as bootstrap from 'bootstrap';
+import * as Utils from './Utils';
 
 declare global {
     interface String {
@@ -66,6 +67,12 @@ type StorageContextStruct = {
     version: string
 }
 
+enum StorageSource {
+    None = "None",
+    UrlParam = "UrlParam",
+    LocalStorage = "LocalStorage"
+}
+
 class StorageContext
 {
     private crossword_id : number;
@@ -76,13 +83,16 @@ class StorageContext
     private num_clues_across : number;
     private num_clues_down : number;
 
-    private context : StorageContextStruct;
+    private context : StorageContextStruct | null = null;
     private local_storage_key : string;
+
+    private current_storage_source = StorageSource.None;
 
     private readonly LOCAL_STORAGE_VCN_KEY = "VCN";
     private readonly LOCAL_STORAGE_VCN_VAL = "1";
     private readonly LOCAL_STORAGE_STRUCT_VERSION = "2";
     private readonly LOCAL_STORAGE_KEY_PREFIX = "crossword_";
+    public static readonly STATE_URL_PARAM = "state";
 
     private readonly EMPTY_CHAR = "?";
 
@@ -98,8 +108,12 @@ class StorageContext
         this.local_storage_key = this.LOCAL_STORAGE_KEY_PREFIX + crossword_id.toString();
         
         this.localStorageInit();
-        
-        this.context = this.loadContext();
+    }
+
+    public async init()
+    {
+        this.context = await this.loadContext();
+        console.log(`Solution loaded from ${this.current_storage_source}`)
     }
 
     private localStorageInit()
@@ -109,14 +123,38 @@ class StorageContext
         if (current_vcn != this.LOCAL_STORAGE_VCN_VAL)
         {
             localStorage.clear();
-            
         }
         localStorage.setItem(this.LOCAL_STORAGE_VCN_KEY, this.LOCAL_STORAGE_VCN_VAL);
     }
 
-    private loadContext()
+    private async loadContext()
     {
-        const input = localStorage.getItem(this.local_storage_key);
+        const urlParams = new URLSearchParams(window.location.search);
+        let input = null;
+
+        try
+        {
+            if (urlParams.has(StorageContext.STATE_URL_PARAM)) 
+            {
+                const urlParamValue = urlParams.get(StorageContext.STATE_URL_PARAM);
+                if (urlParamValue != null)
+                {
+                    input = decodeURIComponent(urlParamValue);
+                    input = await Utils.StringCompressor.decompress(input);
+                    this.current_storage_source = StorageSource.UrlParam;
+                }
+            }
+        }
+        catch (error)
+        {
+            input = null;
+        }
+
+        if (input == null)
+        {
+            input = localStorage.getItem(this.local_storage_key);
+            this.current_storage_source = StorageSource.LocalStorage;
+        }
 
         try
         {
@@ -153,6 +191,7 @@ class StorageContext
         }
         catch (err)
         {
+            this.current_storage_source = StorageSource.None;
             console.log(err);
             let arr = Array.from({ length: this.rows }, () => this.EMPTY_CHAR.repeat(this.cols));
             return this.generateContext(arr);
@@ -178,7 +217,7 @@ class StorageContext
             throw new Error("Invalid input for getLetter!");
         }
 
-        const res = this.context["input"][coordinate.row].charAt(coordinate.col);
+        const res = this.context!["input"][coordinate.row].charAt(coordinate.col);
         return res == this.EMPTY_CHAR ? "" : res;
     }
 
@@ -195,19 +234,62 @@ class StorageContext
             throw new Error("Invalid input for setLetter!");
         }
 
-        this.context["input"][coordinate.row] 
-            = this.context["input"][coordinate.row].replaceAt(coordinate.col, letter == "" ? this.EMPTY_CHAR : letter);
-        localStorage.setItem(this.local_storage_key, JSON.stringify(this.context));
+        this.context!["input"][coordinate.row] 
+            = this.context!["input"][coordinate.row].replaceAt(coordinate.col, letter == "" ? this.EMPTY_CHAR : letter);
+        localStorage.setItem(this.local_storage_key, JSON.stringify(this.context!));
     }
 
-    public setClueSolved(clueId: number, direction: "down" | "across", solved: boolean) {
-        this.context["solved_clues"][direction] 
-            = this.context["solved_clues"][direction].replaceAt(clueId - 1, Number(solved).toString());
-        localStorage.setItem(this.local_storage_key, JSON.stringify(this.context));
+    public setClueSolved(clueId: number, direction: "down" | "across", solved: boolean) 
+    {
+        this.context!["solved_clues"][direction] 
+            = this.context!["solved_clues"][direction].replaceAt(clueId - 1, Number(solved).toString());
+        localStorage.setItem(this.local_storage_key, JSON.stringify(this.context!));
     }
 
-    public getClueSolved(clueId: number, direction: "down" | "across") : boolean {
-        return this.context["solved_clues"][direction].charAt(clueId - 1) == Number(true).toString();
+    public getClueSolved(clueId: number, direction: "down" | "across") : boolean 
+    {
+        return this.context!["solved_clues"][direction].charAt(clueId - 1) == Number(true).toString();
+    }
+
+    public getCrosswordId() : number 
+    {
+        return this.crossword_id;
+    }
+
+    public getState() : string 
+    {
+        return JSON.stringify(this.context);
+    }
+
+    public getCurrentStorageSource() : StorageSource 
+    {
+        return this.current_storage_source;
+    }
+
+    public getPrimaryStorageSource() : StorageSource 
+    {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has(StorageContext.STATE_URL_PARAM)) 
+        {
+            return StorageSource.UrlParam;
+        }
+
+        if (localStorage.hasOwnProperty(this.local_storage_key))
+        {
+            return StorageSource.LocalStorage;
+        }
+
+        return StorageSource.None;
+    }
+
+    public forceFlushContext() 
+    {
+        const input = localStorage.getItem(this.local_storage_key);
+        if (input != null && input != "")
+        {
+            localStorage.setItem(this.local_storage_key + "_backup", input);
+        }
+        localStorage.setItem(this.local_storage_key, JSON.stringify(this.context!));
     }
 }
 
@@ -233,11 +315,9 @@ export default class Display
         this.crossword = document.getElementById("crossword")!;
         this.clues_horizontal = document.getElementById("clues_horizontal")!;
         this.clues_vertical = document.getElementById("clues_vertical")!;
-
-        this.addKeyListener();
     }
 
-    showCrossword(puzzleInfo: CrosswordPuzzleInfo) : void
+    async showCrossword(puzzleInfo: CrosswordPuzzleInfo)
     {
         this.clues = {};
 
@@ -255,6 +335,9 @@ export default class Display
                                                     puzzleInfo.dimensions.columns,
                                                     getMaxId(puzzleInfo.definitions.across),
                                                     getMaxId(puzzleInfo.definitions.down));
+        await this.storageContext.init();
+
+        this.addKeyListener();
         
         this.crossword.appendChild(this.createPuzzleSvg(puzzleInfo));
         this.crossword.appendChild(this.createDummyInputGrid(puzzleInfo.dimensions.rows, puzzleInfo.dimensions.columns));
@@ -263,6 +346,7 @@ export default class Display
         this.clues_vertical.appendChild(this.createClues("down", puzzleInfo));
 
         this.setupCheckSolution(puzzleInfo);
+        this.setupShareSolution();
 
         this.setTitle(`תשבץ אינטל ${puzzleInfo.id}`)
 
@@ -351,6 +435,64 @@ export default class Display
         }
     }
 
+    private setupShareSolution() {
+        const that = this;
+
+        if (this.storageContext?.getCurrentStorageSource() == StorageSource.UrlParam)
+        {
+            const refresh = () => {
+                const currentURL = window.location.href;
+                const urlWithoutParameters = currentURL.split('?')[0];
+                window.location.href = `${urlWithoutParameters}?id=${that.storageContext?.getCrosswordId()}`;
+            };
+            document.getElementById("shareSolutionWrapper")?.classList.add("hide");
+            document.getElementById("share_actions")?.classList.remove("hide");
+
+            document.getElementById("share_back")?.addEventListener('click', (event: Event) => {
+                refresh();
+            });
+
+            document.getElementById("share_import")?.addEventListener('click', (event: Event) => {
+                that.storageContext?.forceFlushContext();
+                refresh();
+            });
+        }
+        else
+        {
+            if (this.storageContext?.getPrimaryStorageSource() == StorageSource.UrlParam)
+            {
+                document.getElementById("share_error")?.classList.remove("hide");
+            }
+
+            const shareLink = document.getElementById("share_link") as HTMLInputElement;
+            if (shareLink == null)
+            {
+                return;
+            }
+    
+            document.getElementById('share_link_button')?.addEventListener('click', async (event: Event) => {
+                await navigator.clipboard.writeText(shareLink.value);
+            });
+    
+            shareLink.addEventListener('click', async (event: Event) => {
+                shareLink.setSelectionRange(0, shareLink.value.length);
+            });
+    
+            document.getElementById('shareSolutionModal')?.addEventListener('show.bs.modal', (event: Event) => {
+                const currentURL = window.location.href;
+                const urlWithoutParameters = currentURL.split('?')[0];
+                Utils.StringCompressor.compress(that.storageContext!.getState()).then((compressedString: string) => {
+                    shareLink.value = `${urlWithoutParameters}?id=${that.storageContext?.getCrosswordId()}` + 
+                                      `&${StorageContext.STATE_URL_PARAM}=${encodeURIComponent(compressedString)}`;
+                });
+                shareLink.setSelectionRange(0, shareLink.value.length);
+            }); 
+    
+            const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
+            const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
+        }
+    }
+
     private createClues(directionStr: "across" | "down", puzzleInfo: CrosswordPuzzleInfo) : HTMLDListElement
     {
         const that = this;
@@ -364,7 +506,10 @@ export default class Display
             checkbox.classList.add("clue_checkbox");
 
             const dt = document.createElement("dt");
-            dt.appendChild(checkbox);
+            if (this.storageContext?.getCurrentStorageSource() != StorageSource.UrlParam)
+            {
+                dt.appendChild(checkbox);
+            }
             dt.appendChild(document.createTextNode(`[${id}]`));
             const dd = document.createElement("dd");
             dd.textContent = `${puzzleInfo.definitions[directionStr][id]}`;
@@ -489,10 +634,13 @@ export default class Display
                     group.appendChild(letter_elem);
                     gridElement = {rect: rect, text: letter_elem, clue_id: clue_id};
                     
-
                     if (!isSolution)
                     {
-                        letter_elem.addEventListener("click", function(){that.handleRectClick(row, col);});
+                        if (this.storageContext?.getCurrentStorageSource() != StorageSource.UrlParam)
+                        {
+                            letter_elem.addEventListener("click", function(){that.handleRectClick(row, col);});
+                        }
+
                         if (this.storageContext)
                         {
                             this.setGridText(letter_elem, this.storageContext.getLetter({row: row, col: col}));
@@ -514,7 +662,10 @@ export default class Display
                 if (!isSolution)
                 {
                     this.grid[row][col] = gridElement;
-                    rect.addEventListener("click", function(){that.handleRectClick(row, col);});
+                    if (this.storageContext?.getCurrentStorageSource() != StorageSource.UrlParam)
+                    {
+                        rect.addEventListener("click", function(){that.handleRectClick(row, col);});
+                    }
                 }
             }
         }
@@ -673,14 +824,21 @@ export default class Display
         const that = this;
         const eventListener = function(event: KeyboardEvent) 
         {
+            const inputElement = (event.target as HTMLInputElement);
+
+            if (!inputElement.classList.contains("dummy_input"))
+            {
+                return;
+            }
+
             let eventKey = event.key;
             if (eventKey == "Unidentified")
             {
                 // Android
-                eventKey = (event.target as HTMLInputElement).value
+                eventKey = inputElement.value
             }
 
-            (event.target as HTMLInputElement).value = '';
+            inputElement.value = '';
             if (that.clickContext.activeCoordinate == null)
             {
                 return;
@@ -716,7 +874,11 @@ export default class Display
             
         };
 
-        document.body.addEventListener("keyup", eventListener);
+        if (this.storageContext?.getCurrentStorageSource() != StorageSource.UrlParam)
+        {
+            document.body.addEventListener("keyup", eventListener);
+        }
+
         /*
         Array.from(document.getElementsByClassName("dummy_input")).forEach(
             (element, index, array) => {

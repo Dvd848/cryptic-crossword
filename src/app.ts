@@ -23,7 +23,7 @@ async function showWebpage()
             throw new Error("Can't retrieve crossword");
         }
         const crossword_json = await response.json();
-        display.showCrossword(crossword_json);
+        await display.showCrossword(crossword_json);
     }
     catch (err)
     {

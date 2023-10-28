@@ -42,9 +42,38 @@
         </div>
     </nav>
 
+    <div class="alert alert-warning hide" role="alert" id="share_actions">
+        <h4 class="alert-heading">צפייה בפתרון משותף</h4>
+        <div>
+            <p>
+                הנכם צופים בתשבץ במצב שיתוף. 
+                במצב זה, ניתן לצפות בפתרון התשבץ המשותף, אך לא לערוך אותו.
+            </p>
+            <p>
+                אם תרצו לייבא את הפתרון המשותף, תוכלו לבחור באפשרות "<b>ייבוא פתרון</b>"
+                וכך להמשיך לפתור את התשבץ מהנקודה שהנכם רואים כעת. שימו לב: בחירה באפשרות זו תדרוס את הפתרון הקודם שלכם, אם קיים אחד כזה.
+            </p>
+            <p>
+                לחלופין, באפשרותכם לחזור לפתרון הקודם שלכם על ידי בחירה ב"<b>חזרה</b>". בחירה באפשרות זו תאפשר לכם להמשיך
+                לפתור את התשבץ מהנקודה שבה הייתם לפני שצפיתם בפתרון המשותף.
+            </p>
+            <div style="text-align: center;">
+                <button type="button" class="btn btn-primary" id="share_back">חזרה</button>
+                <button type="button" class="btn btn-danger" id="share_import">ייבוא פתרון</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-danger alert-dismissible fade show hide" role="alert" id="share_error">
+        שגיאה בטעינת הפתרון המשותף. אנא בדקו שהקישור שלכם תקין.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
     <div id="wrapper" class="hide">
         <h1 id="title"></h1>
         <h2 id="author"></h2>
+    
+
         <div class="row" id="crossword_wrapper">
             <div>
                 <ul class="nav nav-tabs" id="tabs_header" role="tablist">
@@ -67,7 +96,11 @@
             <div id="clues_horizontal" class="clues col"></div>
             <div id="clues_vertical" class="clues col"></div>
         </div>
-        <div class="row" id="checkSolutionWrapper">
+        <div class="row bottom_button" id="checkSolutionWrapper">
+        </div>
+        <div class="row bottom_button" id="shareSolutionWrapper">
+            <button class="btn btn-outline-dark" data-bs-toggle="modal" 
+                    style="width: 30%; margin: auto;" data-bs-target="#shareSolutionModal">שיתוף פתרון</button>
         </div>
     </div>
 
@@ -146,6 +179,37 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" id="solutionMessage">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">סגירה</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="modal fade modal-lg" id="shareSolutionModal" tabindex="-1" aria-labelledby="shareSolutionLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title fs-5" id="shareSolutionLabel">שיתוף הפתרון הנוכחי</h3>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="shareSolution">
+                    <p>
+                        באמצעות הקישור הבא תוכלו לשתף את הפתרון הנוכחי שלכם עם (אנשים או דפדפנים) אחרים.
+                    </p>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <label class="input-group-text">קישור שיתוף: </label>
+                        </div>
+                        <input type="text" class="form-control" id="share_link" style="direction: ltr; user-select: text;" readonly>
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary btn-success text-white" type="button" id="share_link_button" 
+                                    data-bs-container="body"
+                                    data-bs-toggle="popover" data-bs-placement="top" data-bs-content="הקישור הועתק">📋</button>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">סגירה</button>
