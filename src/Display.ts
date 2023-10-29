@@ -370,7 +370,7 @@ export default class Display
     {
         if (typeof (puzzleInfo.sol_hash) === 'undefined' || puzzleInfo.sol_hash == "")
         {
-            document.getElementById("checkSolutionWrapper")!.innerHTML = "";
+            document.getElementById("check_solution_wrapper")!.innerHTML = "";
             document.getElementById("tabs_header")?.classList.add("hide");
         }
         else
@@ -392,7 +392,7 @@ export default class Display
             const that = this;
             button.classList.add("btn", "btn-secondary");
             button.textContent = "בדיקת פתרון";
-            const modal = new bootstrap.Modal(document.getElementById("solutionModal")!, {});
+            const modal = new bootstrap.Modal(document.getElementById("solution_modal")!, {});
             button.addEventListener('click', async (event) => {
                 let current_sol = "";
                 for (let row = 0; row < puzzleInfo.dimensions.rows; ++row)
@@ -404,8 +404,8 @@ export default class Display
                 }
 
                 const current_hash = await digestMessage(current_sol);
-                const modalMessage = document.getElementById("solutionMessage")!;
-                const modalHeader = document.getElementById("solutionModal")!.getElementsByClassName("modal-header")![0];
+                const modalMessage = document.getElementById("solution_message")!;
+                const modalHeader = document.getElementById("solution_modal")!.getElementsByClassName("modal-header")![0];
                 if (current_hash === puzzleInfo.sol_hash)
                 {
                     modalMessage.innerHTML = "<h4>כל הכבוד!</h4><p>פתרתם את התשבץ!</p>";
@@ -421,7 +421,7 @@ export default class Display
                 }
                 modal.show();
             })
-            document.getElementById("checkSolutionWrapper")!.appendChild(button);
+            document.getElementById("check_solution_wrapper")!.appendChild(button);
 
             // Full solution
 
@@ -445,7 +445,7 @@ export default class Display
                 const urlWithoutParameters = currentURL.split('?')[0];
                 window.location.href = `${urlWithoutParameters}?id=${that.storageContext?.getCrosswordId()}`;
             };
-            document.getElementById("shareSolutionWrapper")?.classList.add("hide");
+            document.getElementById("share_solution_wrapper")?.classList.add("hide");
             document.getElementById("share_actions")?.classList.remove("hide");
 
             document.getElementById("share_back")?.addEventListener('click', (event: Event) => {
@@ -478,7 +478,7 @@ export default class Display
                 shareLink.setSelectionRange(0, shareLink.value.length);
             });
     
-            document.getElementById('shareSolutionModal')?.addEventListener('show.bs.modal', (event: Event) => {
+            document.getElementById('share_solution_modal')?.addEventListener('show.bs.modal', (event: Event) => {
                 const currentURL = window.location.href;
                 const urlWithoutParameters = currentURL.split('?')[0];
                 Utils.StringCompressor.compress(that.storageContext!.getState()).then((compressedString: string) => {
@@ -898,7 +898,7 @@ export default class Display
 
         const populateSelect = function (sortedNumbers: number[]): void 
         {
-            const selectElement = document.getElementById("crosswordSelect") as HTMLSelectElement;
+            const selectElement = document.getElementById("crossword_select") as HTMLSelectElement;
             
             sortedNumbers.forEach(number => {
                 const option = document.createElement("option");
@@ -910,7 +910,7 @@ export default class Display
 
         const handleButtonClick = function(): void 
         {
-            const selectedCrossword = (document.getElementById("crosswordSelect") as HTMLSelectElement).value;
+            const selectedCrossword = (document.getElementById("crossword_select") as HTMLSelectElement).value;
             if (selectedCrossword) {
                 window.location.href = `?id=${selectedCrossword}`;
             }
@@ -919,8 +919,8 @@ export default class Display
         const sortedCrosswordIds = sortNumbers(indexInfo.ids);
         populateSelect(sortedCrosswordIds);
 
-        document.getElementById("chooseCrossword")?.addEventListener("click", handleButtonClick);
-        document.getElementById("crosswordSelect")?.addEventListener("change", handleButtonClick);
+        document.getElementById("choose_crossword")?.addEventListener("click", handleButtonClick);
+        document.getElementById("crossword_select")?.addEventListener("change", handleButtonClick);
         document.getElementById("index")!.classList.remove("hide");
         document.getElementById("loader")?.remove();
     }

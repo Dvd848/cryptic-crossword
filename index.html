@@ -19,20 +19,20 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark" data-bs-theme="dark">
         <div class="container-fluid">
             <a class="navbar-brand" href="?home">ארכיון תשבצי אינטל</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar_supported_content" aria-controls="navbar_supported_content" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
        
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <div class="collapse navbar-collapse" id="navbar_supported_content">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
                         <a class="nav-link" aria-current="page" href="?home">רשימת התשבצים</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#" data-bs-target="#instructionsModal" data-bs-toggle="modal">הוראות</a>
+                        <a class="nav-link" href="#" data-bs-target="#instructions_modal" data-bs-toggle="modal">הוראות</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#" data-bs-target="#aboutModal" data-bs-toggle="modal">אודות</a>
+                        <a class="nav-link" href="#" data-bs-target="#about_modal" data-bs-toggle="modal">אודות</a>
                     </li>
                 </ul>
                 <span class="navbar-text d-none d-lg-block">
@@ -96,18 +96,18 @@
             <div id="clues_horizontal" class="clues col"></div>
             <div id="clues_vertical" class="clues col"></div>
         </div>
-        <div class="row bottom_button" id="checkSolutionWrapper">
+        <div class="row bottom_button" id="check_solution_wrapper">
         </div>
-        <div class="row bottom_button" id="shareSolutionWrapper">
+        <div class="row bottom_button" id="share_solution_wrapper">
             <button class="btn btn-outline-dark" data-bs-toggle="modal" 
-                    style="width: 30%; margin: auto;" data-bs-target="#shareSolutionModal">שיתוף פתרון</button>
+                    style="width: 30%; margin: auto;" data-bs-target="#share_solution_modal">שיתוף פתרון</button>
         </div>
     </div>
 
     <div id="index" class="hide">
         <img src="logo.png" alt="ארכיון תשבצי אינטל" width="350"/>
-        <select id="crosswordSelect" class="form-select form-select-lg"></select>
-        <button id="chooseCrossword" class="btn btn-primary  btn-lg col-2">בחירה</button>
+        <select id="crossword_select" class="form-select form-select-lg"></select>
+        <button id="choose_crossword" class="btn btn-primary  btn-lg col-2">בחירה</button>
     </div>
 
     <div id="loader">
@@ -116,11 +116,11 @@
         </div>
     </div>
 
-    <div class="modal fade" id="aboutModal" tabindex="-1" aria-labelledby="aboutModalLabel" aria-hidden="true">
+    <div class="modal fade" id="about_modal" tabindex="-1" aria-labelledby="about_modal_label" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3 class="modal-title fs-5" id="aboutModalLabel">אודות</h3>
+                    <h3 class="modal-title fs-5" id="about_modal_label">אודות</h3>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -144,11 +144,11 @@
         </div>
     </div>
 
-    <div class="modal fade" id="instructionsModal" tabindex="-1" aria-labelledby="instructionsModalLabel" aria-hidden="true">
+    <div class="modal fade" id="instructions_modal" tabindex="-1" aria-labelledby="instructions_modal_label" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3 class="modal-title fs-5" id="instructionsModalLabel">הוראות</h3>
+                    <h3 class="modal-title fs-5" id="instructions_modal_label">הוראות</h3>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -172,13 +172,13 @@
         </div>
     </div>
 
-    <div class="modal" id="solutionModal" tabindex="-1">
+    <div class="modal" id="solution_modal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body" id="solutionMessage">
+                <div class="modal-body" id="solution_message">
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">סגירה</button>
@@ -188,14 +188,14 @@
     </div>
 
     
-    <div class="modal fade modal-lg" id="shareSolutionModal" tabindex="-1" aria-labelledby="shareSolutionLabel" aria-hidden="true">
+    <div class="modal fade modal-lg" id="share_solution_modal" tabindex="-1" aria-labelledby="share_solution_label" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3 class="modal-title fs-5" id="shareSolutionLabel">שיתוף הפתרון הנוכחי</h3>
+                    <h3 class="modal-title fs-5" id="share_solution_label">שיתוף הפתרון הנוכחי</h3>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body" id="shareSolution">
+                <div class="modal-body">
                     <p>
                         באמצעות הקישור הבא תוכלו לשתף את הפתרון הנוכחי שלכם עם (אנשים או דפדפנים) אחרים.
                     </p>

@@ -104,26 +104,26 @@ h2 {
     /*background: red;*/
 }
 
-#crosswordSelect {
+#crossword_select {
     width: 600px;
     height: 80px;
     margin: 20px auto;
 }
 
-#chooseCrossword {
+#choose_crossword {
     margin: 20px auto;
     height: 80px;
 }
 
-#solutionModal .modal-header.success {
+#solution_modal .modal-header.success {
     background: #47c9a2;
 }
 
-#solutionModal .modal-header.failure {
+#solution_modal .modal-header.failure {
     background: #c86464;
 }
 
-#solutionModal .modal-body {
+#solution_modal .modal-body {
     text-align: center;
 }
 
