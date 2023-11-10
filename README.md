@@ -21,12 +21,17 @@ The crossword puzzles are available online [here](https://dvd848.github.io/crypt
 
 ![](screenshots/game6.png)
 
+![](screenshots/game7.png)
+
 ## Features
 
  * Remembers your session on a given browser - allows to stop and continue later
  * Offers the ability to check your solution or view the official solution
    * Solutions are published a week after the original puzzle is released
  * Mobile-friendly user-interface
+ * Allows marking clues as completed
+ * Allows sharing the current state with other people (or browsers) via a dedicated share link
+   * This can be used, for example, to move easily between a desktop and a mobile device
 
 ## How to solve a Cryptic Crossword?
 
