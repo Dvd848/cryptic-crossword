@@ -267,7 +267,7 @@
       "27": "\u05e0\u05ea\u05e0\u05d5 \u05dc\u05d4\u05dd \u05dc\u05d4\u05d9\u05d5\u05ea \u05db\u05de\u05d5 \u05de\u05e9\u05e7\u05d4 \u05d1\u05e6\u05d1\u05e2 \u05d0\u05d7\u05d3 (8)"
     }
   },
-  "sol_hash": "b017d383a0337d5f9e21289a4ced42b571e1b82f951737365ecffc4f132224eb2e049132be9a17b3bd9bb96ede74a679aa132bee93b9148d141857a90faad5a9",
+  "sol_hash": "7ca576ab618569766bca400714d4c25aa03a0373ec1208118b0d876560a8c538aff8dbefa77008e9705f40c26c6ba6395a5ef1f2352b57c95e2844787a1273ae",
   "sol_grid": [
     [
       "\u05d3",
@@ -462,6 +462,7 @@
       "\u05e8"
     ],
     [
+      "\u05d9",
       "#",
       "\u05d1",
       "#",
@@ -492,5 +493,41 @@
       "\u05d5",
       "\u05ea"
     ]
-  ]
+  ],
+  "solutions": {
+    "down": {
+      "7": "\u05d3\u05dc\u05d0\u05d5\u05d5\u05e8",
+      "6": "\u05e0\u05d5\u05e9\u05d0\u05e8\u05d5\u05d5\u05d7\u05d9\u05de",
+      "5": "\u05d9\u05e9",
+      "4": "\u05e0\u05d2\u05de\u05e8",
+      "3": "\u05d9\u05d5\u05e0\u05ea\u05e0\u05e4\u05d5\u05dc\u05d0\u05e8\u05d3",
+      "2": "\u05e8\u05d7\u05dc\u05d9\u05de",
+      "1": "\u05e2\u05d3\u05de\u05d3\u05d9\u05e0\u05d4",
+      "11": "\u05d7\u05e4\u05e9\u05d0\u05ea\u05d4\u05de\u05d8\u05de\u05d5\u05e0",
+      "13": "\u05d0\u05e1\u05ea\u05e8\u05e2\u05d5\u05e4\u05e8\u05d9\u05de",
+      "17": "\u05d9\u05d5\u05de\u05e8\u05e0\u05d9\u05de",
+      "18": "\u05d4\u05e4\u05e7\u05e8\u05d5\u05ea",
+      "20": "\u05d7\u05d9\u05d9\u05d1\u05e8",
+      "22": "\u05d4\u05d3\u05d5\u05de",
+      "25": "\u05e7\u05d3"
+    },
+    "across": {
+      "5": "\u05d9\u05e0\u05d5\u05e7\u05d3",
+      "1": "\u05e2\u05d6\u05e8\u05de\u05e6\u05d9\u05d5\u05e0",
+      "8": "\u05d2\u05d3\u05e9\u05d5",
+      "9": "\u05de\u05d9\u05dc\u05d9\u05d5\u05e0\u05d9\u05de",
+      "10": "\u05e8\u05d7\u05dc\u05d0\u05de\u05e0\u05d5",
+      "12": "\u05d9\u05e9\u05de\u05d0\u05d9\u05e0",
+      "14": "\u05e4\u05d8\u05d9\u05e9\u05d0\u05d5\u05d5\u05d9\u05e8",
+      "15": "\u05d4\u05d2\u05e0\u05ea\u05e0\u05d5",
+      "16": "\u05ea\u05e0\u05d7\u05d5\u05de\u05d9",
+      "18": "\u05d4\u05d5\u05e9\u05e2\u05e0\u05d0\u05e8\u05d1\u05d4",
+      "19": "\u05de\u05ea\u05de\u05d7\u05d9\u05de",
+      "21": "\u05e7\u05d5\u05d4\u05e4\u05e8\u05d3\u05d4",
+      "23": "\u05d3\u05d5\u05de\u05d9\u05e0\u05d9\u05d5\u05e0",
+      "24": "\u05d9\u05e7\u05e8\u05d5",
+      "27": "\u05de\u05d5\u05e0\u05d5\u05db\u05e8\u05d5\u05de",
+      "26": "\u05ea\u05d5\u05e2\u05de\u05d3"
+    }
+  }
 }
