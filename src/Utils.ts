@@ -38,3 +38,18 @@ export class StringCompressor {
         return decompressedData;
     }
 }
+
+export const digestMessage = async function (message: string) {
+    const leftPad = (s: string, c: string, n: number) => c.repeat(n - s.length) + s;
+    const msgUint8 = new TextEncoder().encode(message); // encode as (utf-8) Uint8Array
+    const hashBuffer = await crypto.subtle.digest("SHA-512", msgUint8); // hash the message
+    const hashArray = Array.from(new Uint8Array(hashBuffer)); // convert buffer to byte array
+    const hashHex = hashArray
+      .map((b) => leftPad(b.toString(16), "0", 2))
+      .join(""); // convert bytes to hex string
+    return hashHex;
+}
+
+export const randomElement = function(arr: any[]) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}

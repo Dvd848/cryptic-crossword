@@ -25,7 +25,16 @@ type CrosswordPuzzleInfo = {
     };
     sol_hash: string | undefined;
     sol_grid: string[][] | undefined;
+    solutions: {
+        down: { [id: string]: string };
+        across: { [id: string]: string };
+    } | undefined;
 };
+
+interface Config {
+    skipStorage?: boolean;
+    skipShare?: boolean
+  }
 
 type IndexdInfo = {
     ids: number[];
@@ -315,9 +324,11 @@ export default class Display
         this.crossword = document.getElementById("crossword")!;
         this.clues_horizontal = document.getElementById("clues_horizontal")!;
         this.clues_vertical = document.getElementById("clues_vertical")!;
+        
+        document.getElementById("single_menu_link")?.addEventListener('click', this.randomSingle);
     }
 
-    async showCrossword(puzzleInfo: CrosswordPuzzleInfo)
+    async showCrossword(puzzleInfo: CrosswordPuzzleInfo, config: Config)
     {
         this.clues = {};
 
@@ -327,16 +338,18 @@ export default class Display
         this.clues_horizontal.innerHTML = '<h3>מאוזן</h3>';
         this.clues_vertical.innerHTML = '<h3>מאונך</h3>';
 
-        const getMaxId = (x: { [id: string]: string }) => Math.max(...Object.keys(x).map(id => parseInt(id, 10)));
-
+        if (!config.skipStorage)
+        {
+            const getMaxId = (x: { [id: string]: string }) => Math.max(...Object.keys(x).map(id => parseInt(id, 10)));
+    
+            this.storageContext = new StorageContext(puzzleInfo.id, 
+                                                        puzzleInfo.dimensions.rows, 
+                                                        puzzleInfo.dimensions.columns,
+                                                        getMaxId(puzzleInfo.definitions.across),
+                                                        getMaxId(puzzleInfo.definitions.down));
+            await this.storageContext.init();
+        }
         
-        this.storageContext = new StorageContext(puzzleInfo.id, 
-                                                    puzzleInfo.dimensions.rows, 
-                                                    puzzleInfo.dimensions.columns,
-                                                    getMaxId(puzzleInfo.definitions.across),
-                                                    getMaxId(puzzleInfo.definitions.down));
-        await this.storageContext.init();
-
         this.addKeyListener();
         
         this.crossword.appendChild(this.createPuzzleSvg(puzzleInfo));
@@ -346,14 +359,74 @@ export default class Display
         this.clues_vertical.appendChild(this.createClues("down", puzzleInfo));
 
         this.setupCheckSolution(puzzleInfo);
-        this.setupShareSolution();
+        if (!config.skipShare)
+        {
+            this.setupShareSolution();
+        }
+        else
+        {
+            document.getElementById("share_solution_wrapper")?.remove();
+        }
 
-        this.setTitle(`תשבץ אינטל ${puzzleInfo.id}`)
+        this.setTitle(`תשבץ אינטל ${puzzleInfo.id}`);
 
         document.getElementById("wrapper")!.classList.remove("hide");
         document.getElementById("loader")?.remove();
     }
 
+    async showSingle(puzzleInfo: CrosswordPuzzleInfo, direction: string, defId: string)
+    {
+        if (!["across", "down"].includes(direction)) 
+        {
+            throw Error("Invalid direction!");
+        }
+
+        if (typeof (puzzleInfo.solutions) === 'undefined')
+        {
+            throw Error("No solution for single!");
+        }
+
+        const solution = puzzleInfo.solutions[direction as "across" | "down"][defId];
+        if (typeof (solution) === 'undefined')
+        {
+            throw Error("Can't find definition!");
+        }
+
+        puzzleInfo.dimensions.rows = 1;
+        puzzleInfo.dimensions.columns = solution.length;
+        puzzleInfo.grid = [Array(puzzleInfo.dimensions.columns).fill("")];
+        puzzleInfo.grid[0][solution.length - 1] = "1";
+        puzzleInfo.sol_grid = [solution.split('').reverse()];
+        puzzleInfo.definitions = {"across": {1: puzzleInfo.definitions[direction as "across" | "down"][defId]}, "down": {}};
+        puzzleInfo.sol_hash = await Utils.digestMessage(puzzleInfo.sol_grid[0].join(""));
+
+        await this.showCrossword(puzzleInfo, {"skipStorage": true, "skipShare": true});
+        
+        document.getElementById("title")!.textContent = `טעימה מתוך תשבץ אינטל ${puzzleInfo.id}`;
+        const h3Element = document.querySelector("#clues_horizontal h3");
+        if (h3Element)
+        {
+            h3Element.textContent = "הגדרה";
+        }
+
+        const firstButton = document.querySelector('#tabs_header .nav-item:first-child .nav-link');
+        if (firstButton)
+        {
+            firstButton.textContent = "הגדרה";
+        }
+
+        this.clues_vertical.innerHTML = '';
+
+        this.setTitle(`הגדרה מתוך תשבץ אינטל ${puzzleInfo.id}`);
+
+        const button = document.createElement("button");
+        button.classList.add("btn", "btn-outline-dark", "random_single");
+        button.textContent = "עוד טעימה";
+        button.addEventListener('click', this.randomSingle);
+        document.getElementById("check_solution_wrapper")!.appendChild(button);
+
+        this.selectDefinitionById(1, Direction.Horizontal);
+    }
 
     private setTitle(title: string)
     {
@@ -375,19 +448,6 @@ export default class Display
         }
         else
         {
-            // Solution hash
-
-            const digestMessage = async function (message: string) {
-                const leftPad = (s: string, c: string, n: number) => c.repeat(n - s.length) + s;
-                const msgUint8 = new TextEncoder().encode(message); // encode as (utf-8) Uint8Array
-                const hashBuffer = await crypto.subtle.digest("SHA-512", msgUint8); // hash the message
-                const hashArray = Array.from(new Uint8Array(hashBuffer)); // convert buffer to byte array
-                const hashHex = hashArray
-                  .map((b) => leftPad(b.toString(16), "0", 2))
-                  .join(""); // convert bytes to hex string
-                return hashHex;
-              }
-
             const button = document.createElement("button");
             const that = this;
             button.classList.add("btn", "btn-secondary");
@@ -403,7 +463,7 @@ export default class Display
                     }
                 }
 
-                const current_hash = await digestMessage(current_sol);
+                const current_hash = await Utils.digestMessage(current_sol);
                 const modalMessage = document.getElementById("solution_message")!;
                 const modalHeader = document.getElementById("solution_modal")!.getElementsByClassName("modal-header")![0];
                 if (current_hash === puzzleInfo.sol_hash)
@@ -886,6 +946,49 @@ export default class Display
             }
         );
         */
+    }
+
+    private async randomSingle() 
+    {
+        const indexResponse = await fetch(`index.json`);
+        if (!indexResponse.ok) 
+        {
+            throw new Error("Can't retrieve index");
+        }
+        const indexJson = await indexResponse.json();
+        const max_retry = 7;
+        for (let i = 0; i < max_retry; i++)
+        {
+            try 
+            {
+                const randomIndex = Utils.randomElement(indexJson.ids);
+                let response = await fetch(`crosswords/${randomIndex}.json`);
+                if (!response.ok) 
+                {
+                    continue;
+                }
+                let json = await response.json();
+                if (typeof (json.solutions) === 'undefined')
+                {
+                    continue;
+                }
+                const direction = Utils.randomElement(["across", "down"]);
+                const defId = Utils.randomElement(Object.keys(json.definitions[direction]));
+                const def = json.definitions[direction][defId];
+                if (new RegExp("מאוזן|מאונך").test(def)) 
+                {
+                    continue;
+                }
+                if (json.solutions[direction][defId].length <= 3)
+                {
+                    continue;
+                }
+                window.location.href = `?single=${json.id}.${direction}.${defId}`;
+                return;
+            } catch(e) {
+                console.log('error:', e);
+            }
+        }
     }
 
     public showIndex(indexInfo: IndexdInfo) : void

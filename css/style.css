@@ -162,3 +162,8 @@ h2 {
 #share_link {
     text-align: left;
 }
+
+.random_single {
+    width: 30%;
+    margin: 20px auto;
+}
