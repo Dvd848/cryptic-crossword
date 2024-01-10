@@ -23,6 +23,8 @@ The crossword puzzles are available online [here](https://dvd848.github.io/crypt
 
 ![](screenshots/game7.png)
 
+![](screenshots/game8.png)
+
 ## Features
 
  * Remembers your session on a given browser - allows to stop and continue later
@@ -32,6 +34,7 @@ The crossword puzzles are available online [here](https://dvd848.github.io/crypt
  * Allows marking clues as completed
  * Allows sharing the current state with other people (or browsers) via a dedicated share link
    * This can be used, for example, to move easily between a desktop and a mobile device
+ * For those with fear of commitment: Offers the ability to try and solve single clues as a standalone riddle, instead of as part of a full crossword
 
 ## How to solve a Cryptic Crossword?
 
@@ -42,7 +45,7 @@ The crossword puzzles are available online [here](https://dvd848.github.io/crypt
 
 There are a few alternatives that offer cryptic crosswords in Hebrew online:
 
- * [haaretz.co.il](https://www.haaretz.co.il/gallery/xword)
+ * [haaretz.co.il](https://www.haaretz.co.il/gallery/xword) (and their [daily cryptic clue](https://www.haaretz.co.il/riddles/2023-12-27/ty-article-static-ext/.premium/0000018b-7abc-d1da-a1bb-7fbcccb00000) as well)
  * [14across.co.il](https://www.14across.co.il/)
  * [higayon.co.il](http://www.higayon.co.il/)
  * [ravmilim.co.il](https://blog.ravmilim.co.il/tasbetson/)
