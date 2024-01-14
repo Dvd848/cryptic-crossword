@@ -402,7 +402,7 @@ export default class Display
 
         await this.showCrossword(puzzleInfo, {"skipStorage": true, "skipShare": true});
         
-        document.getElementById("title")!.textContent = `טעימה מתוך תשבץ אינטל ${puzzleInfo.id}`;
+        document.getElementById("title")!.textContent = `הגדרה אקראית מתוך תשבץ אינטל ${puzzleInfo.id}`;
         const h3Element = document.querySelector("#clues_horizontal h3");
         if (h3Element)
         {
@@ -421,7 +421,7 @@ export default class Display
 
         const button = document.createElement("button");
         button.classList.add("btn", "btn-outline-dark", "random_single");
-        button.textContent = "עוד טעימה";
+        button.textContent = "עוד הגדרה אקראית";
         button.addEventListener('click', this.randomSingle);
         document.getElementById("check_solution_wrapper")!.appendChild(button);
 
