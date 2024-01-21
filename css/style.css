@@ -167,3 +167,19 @@ h2 {
     width: 30%;
     margin: 20px auto;
 }
+
+.popover .btn-close {
+    position: absolute;
+    top: 6px;
+    left: 8px;
+}
+
+.popover-header {
+    padding-left: 80px;
+}
+
+.context_menu_placeholder {
+    text-align: center;
+    margin: 10px 0 0 0;
+    font-size: 1.1em;
+}

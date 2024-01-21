@@ -53,12 +53,12 @@ type GridElement = {
 
 type ClueData = {
     coordinate: Coordinate,
-    directions: Direction[]
+directions: Direction[]
 }
 
 enum Direction {
-    Horizontal = 1,
-    Vertical,
+    Horizontal = "across",
+    Vertical = "down",
 }
 
 type ClickContext = {
@@ -201,7 +201,7 @@ class StorageContext
         catch (err)
         {
             this.current_storage_source = StorageSource.None;
-            console.log(err);
+            //console.log(err);
             let arr = Array.from({ length: this.rows }, () => this.EMPTY_CHAR.repeat(this.cols));
             return this.generateContext(arr);
         }
@@ -313,6 +313,7 @@ export default class Display
         previousCoordinate : null,
         direction : Direction.Horizontal
     };
+    private activeContextMenu : bootstrap.Popover | null = null;
     private storageContext : StorageContext | null = null;
     private clues: Record<number, ClueData> = {};
 
@@ -669,6 +670,7 @@ export default class Display
                 if (puzzleInfo.grid[row][col] == this.BLOCKED_TILE)
                 {
                     rect.setAttribute("fill", "black");
+                    rect.addEventListener("contextmenu", function(e){e.preventDefault();});
                 }
                 else 
                 {
@@ -725,12 +727,120 @@ export default class Display
                     if (this.storageContext?.getCurrentStorageSource() != StorageSource.UrlParam)
                     {
                         rect.addEventListener("click", function(){that.handleRectClick(row, col);});
+                        if (typeof (puzzleInfo.solutions) !== 'undefined' && gridElement != null)
+                        {
+                            this.attachContextMenu(puzzleInfo, gridElement, row, col);
+                        }
                     }
                 }
             }
         }
 
         return svg;
+    }
+
+    private attachContextMenu(puzzleInfo: CrosswordPuzzleInfo, gridElement: GridElement, row: number, col: number) {
+        const that = this;
+        gridElement.rect.addEventListener("contextmenu", function(e){
+            e.preventDefault(); 
+            that.contextMenu(row, col);
+        });
+
+        gridElement.text.addEventListener("contextmenu", function(e){
+            e.preventDefault(); 
+            e.stopPropagation();
+            const clonedEvent = new Event('contextmenu', e);
+            gridElement.rect.dispatchEvent(clonedEvent); 
+        });
+
+        const closeElement = document.createElement('button');
+        closeElement.type = "button";
+        closeElement.className = 'btn-close';
+        closeElement.setAttribute('aria-hidden', 'true');
+        closeElement.addEventListener('click', function(){bootstrap.Popover.getInstance(gridElement.rect)?.hide();});
+
+        const spanElement = document.createElement('span');
+        spanElement.textContent = 'אפשרויות';
+        spanElement.appendChild(closeElement);
+
+        const divElement = document.createElement('div');
+        divElement.className = "context_menu_body";
+
+        const placeholder = document.createElement('div');
+        placeholder.className = 'context_menu_placeholder';
+        placeholder.id = `context_menu_placeholder_${row}_${col}`;
+
+        const checkClueElement = document.createElement('button');
+        checkClueElement.type = "button";
+        checkClueElement.className = 'btn btn-secondary';
+        checkClueElement.textContent = "בדיקת נכונות הגדרה";
+        checkClueElement.addEventListener('click', function(){that.checkClueCorrectness(puzzleInfo, placeholder)});
+
+
+        divElement.appendChild(checkClueElement);
+        divElement.appendChild(placeholder);
+
+        const popover = new bootstrap.Popover(gridElement.rect, {
+            trigger: 'manual',
+            html: true,
+            title: spanElement, 
+            content: divElement,
+            sanitize: false,
+            placement: 'bottom',
+        });
+
+        gridElement.rect.addEventListener('hidden.bs.popover', () => {
+            placeholder.innerHTML = '';
+        })
+    }
+
+    private checkClueCorrectness(puzzleInfo: CrosswordPuzzleInfo, targetDiv: Element) 
+    {
+        if (typeof(puzzleInfo.solutions) == "undefined") 
+        {
+            return;
+        }
+
+        const firstCoordinate = this.getFirstCoordinateForActiveCoordinate();
+        if (firstCoordinate == null)
+        {
+            return;
+        }
+
+        const gridElement = this.grid[firstCoordinate.row][firstCoordinate.col];
+        if ( (gridElement == null) || (gridElement.clue_id == null) )
+        {
+            return;
+        }
+
+        const expectedSol = puzzleInfo.solutions[this.clickContext.direction][gridElement.clue_id];
+        const currentSol = this.getCurrentClueSol(firstCoordinate);
+        let res = "";
+
+        if (expectedSol == currentSol)
+        {
+            res = "הפתרון להגדרה <b style='color: green'>נכון</b>!";
+        }
+        else
+        {
+            res = "הפתרון להגדרה <b style='color: red'>שגוי</b>!";
+        }
+
+        targetDiv.innerHTML = res;
+    }
+
+    private getCurrentClueSol(startCoordinate: Coordinate) : string
+    {
+        let res = "";
+        let coordinate : Coordinate | null = startCoordinate;
+
+        while (coordinate != null) 
+        {
+            res += this.grid[coordinate.row][coordinate.col]?.text.textContent || "?";
+            coordinate = this.nextCoordinate(coordinate);
+        }
+
+        return res;
     }
 
     private swapDirection() : void
@@ -784,6 +894,22 @@ export default class Display
         return (this.isCoordFree(new_coord) ? new_coord : null);
     }
 
+    private getFirstCoordinateForActiveCoordinate() : Coordinate | null
+    {
+        let coordinate = this.clickContext.activeCoordinate;
+        if (coordinate == null) 
+        {
+            return null;
+        }
+
+        while (this.prevCoordinate(coordinate) != null) 
+        {
+            coordinate = this.prevCoordinate(coordinate)!;
+        }
+
+        return coordinate;
+    }
+
     private selectDefinitionById(id: number, direction: Direction) : void
     {
         const coordinate = this.clues[id].coordinate;
@@ -834,6 +960,7 @@ export default class Display
 
     private handleRectClick(row: number, col: number, force_direction: boolean = false) : void
     {
+        this.activeContextMenu?.hide();
         const gridElement = this.grid[row][col];
         if (gridElement == null)
         {
@@ -946,6 +1073,26 @@ export default class Display
             }
         );
         */
+    }
+
+    private contextMenu(row: number, col: number) {
+        if ( (this.clickContext.activeCoordinate == null) 
+                || this.clickContext.activeCoordinate.row != row  
+                || this.clickContext.activeCoordinate.col != col)
+        {
+            this.handleRectClick(row, col);
+        }
+
+        const gridElement = this.grid[row][col];
+        if (gridElement == null)
+        {
+            return;
+        }
+
+        const popover = bootstrap.Popover.getInstance(gridElement.rect);
+        this.activeContextMenu?.hide();
+        this.activeContextMenu = popover;
+        popover?.toggle();
     }
 
     private async randomSingle() 
