@@ -183,3 +183,12 @@ h2 {
     margin: 10px 0 0 0;
     font-size: 1.1em;
 }
+
+.context_menu_body {
+    text-align: center;
+}
+
+.context_menu_body button {
+    min-width: 180px;
+    margin: 5px 2px;
+}

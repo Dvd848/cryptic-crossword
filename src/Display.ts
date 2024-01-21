@@ -53,7 +53,7 @@ type GridElement = {
 
 type ClueData = {
     coordinate: Coordinate,
-directions: Direction[]
+    directions: Direction[]
 }
 
 enum Direction {
@@ -65,6 +65,11 @@ type ClickContext = {
     activeCoordinate : Coordinate | null,
     previousCoordinate : Coordinate | null,
     direction : Direction
+}
+
+enum ClueAction {
+    CheckClueCorrectness,
+    RevealClueSolution,
 }
 
 type StorageContextStruct = {
@@ -773,11 +778,22 @@ export default class Display
         const checkClueElement = document.createElement('button');
         checkClueElement.type = "button";
         checkClueElement.className = 'btn btn-secondary';
-        checkClueElement.textContent = "בדיקת נכונות הגדרה";
-        checkClueElement.addEventListener('click', function(){that.checkClueCorrectness(puzzleInfo, placeholder)});
+        checkClueElement.textContent = "בדיקת נכונות הפתרון";
+        checkClueElement.addEventListener('click', function(){
+            that.handleContextMenuClueAction(puzzleInfo, placeholder, ClueAction.CheckClueCorrectness);
+        });
+
+        const revealClueSolution = document.createElement('button');
+        revealClueSolution.type = "button";
+        revealClueSolution.className = 'btn btn-danger';
+        revealClueSolution.textContent = "צפייה בפתרון ההגדרה";
+        revealClueSolution.addEventListener('click', function(){
+            that.handleContextMenuClueAction(puzzleInfo, placeholder, ClueAction.RevealClueSolution);
+        });
 
 
         divElement.appendChild(checkClueElement);
+        divElement.appendChild(revealClueSolution);
         divElement.appendChild(placeholder);
 
         const popover = new bootstrap.Popover(gridElement.rect, {
@@ -794,7 +810,7 @@ export default class Display
         })
     }
 
-    private checkClueCorrectness(puzzleInfo: CrosswordPuzzleInfo, targetDiv: Element) 
+    private handleContextMenuClueAction(puzzleInfo: CrosswordPuzzleInfo, targetDiv: Element, action: ClueAction) 
     {
         if (typeof(puzzleInfo.solutions) == "undefined") 
         {
@@ -817,13 +833,20 @@ export default class Display
         const currentSol = this.getCurrentClueSol(firstCoordinate);
         let res = "";
 
-        if (expectedSol == currentSol)
+        if (action == ClueAction.CheckClueCorrectness)
         {
-            res = "הפתרון להגדרה <b style='color: green'>נכון</b>!";
+            if (expectedSol == currentSol)
+            {
+                res = "הפתרון להגדרה <b style='color: green'>נכון</b>!";
+            }
+            else
+            {
+                res = "הפתרון להגדרה <b style='color: red'>שגוי</b>!";
+            }
         }
-        else
+        else if (action == ClueAction.RevealClueSolution)
         {
-            res = "הפתרון להגדרה <b style='color: red'>שגוי</b>!";
+            res = `הפתרון להגדרה הוא: "<b>${expectedSol}</b>"`;
         }
 
         targetDiv.innerHTML = res;
