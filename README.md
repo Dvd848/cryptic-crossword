@@ -30,6 +30,7 @@ The crossword puzzles are available online [here](https://dvd848.github.io/crypt
  * Remembers your session on a given browser - allows to stop and continue later
  * Offers the ability to check your solution or view the official solution
    * Solutions are published a week after the original puzzle is released
+   * It's also possible to check the correctness of a single clue, or reveal its solution
  * Mobile-friendly user-interface
  * Allows marking clues as completed
  * Allows sharing the current state with other people (or browsers) via a dedicated share link

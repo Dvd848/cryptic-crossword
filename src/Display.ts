@@ -32,8 +32,10 @@ type CrosswordPuzzleInfo = {
 };
 
 interface Config {
+    isSolution?: boolean;
+    skipContextMenu?: boolean;
     skipStorage?: boolean;
-    skipShare?: boolean
+    skipShare?: boolean;
   }
 
 type IndexdInfo = {
@@ -358,13 +360,13 @@ export default class Display
         
         this.addKeyListener();
         
-        this.crossword.appendChild(this.createPuzzleSvg(puzzleInfo));
+        this.crossword.appendChild(this.createPuzzleSvg(puzzleInfo, config));
         this.crossword.appendChild(this.createDummyInputGrid(puzzleInfo.dimensions.rows, puzzleInfo.dimensions.columns));
 
         this.clues_horizontal.appendChild(this.createClues("across", puzzleInfo));
         this.clues_vertical.appendChild(this.createClues("down", puzzleInfo));
 
-        this.setupCheckSolution(puzzleInfo);
+        this.setupCheckSolution(puzzleInfo, config);
         if (!config.skipShare)
         {
             this.setupShareSolution();
@@ -406,7 +408,7 @@ export default class Display
         puzzleInfo.definitions = {"across": {1: puzzleInfo.definitions[direction as "across" | "down"][defId]}, "down": {}};
         puzzleInfo.sol_hash = await Utils.digestMessage(puzzleInfo.sol_grid[0].join(""));
 
-        await this.showCrossword(puzzleInfo, {"skipStorage": true, "skipShare": true});
+        await this.showCrossword(puzzleInfo, {"skipStorage": true, "skipShare": true, "skipContextMenu": true});
         
         document.getElementById("title")!.textContent = `הגדרה אקראית מתוך תשבץ אינטל ${puzzleInfo.id}`;
         const h3Element = document.querySelector("#clues_horizontal h3");
@@ -445,7 +447,7 @@ export default class Display
         document.title = newTitle;
     }
 
-    private setupCheckSolution(puzzleInfo: CrosswordPuzzleInfo)
+    private setupCheckSolution(puzzleInfo: CrosswordPuzzleInfo, config: Config)
     {
         if (typeof (puzzleInfo.sol_hash) === 'undefined' || puzzleInfo.sol_hash == "")
         {
@@ -495,7 +497,7 @@ export default class Display
             {
                 //document.getElementById("fullSolution")?.appendChild(this.createPuzzleSvg(puzzleInfo, true));
                 const divElement = document.createElement('div');
-                divElement.appendChild(this.createPuzzleSvg(puzzleInfo, true));
+                divElement.appendChild(this.createPuzzleSvg(puzzleInfo, {...config, ...{isSolution: true}}));
                 document.getElementById("solution_tab_content")?.appendChild(divElement);
             }
         }
@@ -632,7 +634,7 @@ export default class Display
         return container;
     }
 
-    private createPuzzleSvg(puzzleInfo: CrosswordPuzzleInfo, isSolution = false) : SVGElement 
+    private createPuzzleSvg(puzzleInfo: CrosswordPuzzleInfo, config: Config) : SVGElement 
     {
         const that = this;
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -640,19 +642,19 @@ export default class Display
         svg.setAttribute("width", `${this.TILE_DIMENSIONS * puzzleInfo.dimensions.columns}`);
         svg.setAttribute("height", `${this.TILE_DIMENSIONS * puzzleInfo.dimensions.rows}`);
 
-        if (isSolution && typeof(puzzleInfo.sol_grid) == "undefined")
+        if (config.isSolution && typeof(puzzleInfo.sol_grid) == "undefined")
         {
             throw new Error("No solution exists");
         }
 
-        if (!isSolution)
+        if (!config.isSolution)
         {
             this.grid = new Array(puzzleInfo.dimensions.rows);
         }
 
         for (let row = 0; row < puzzleInfo.dimensions.rows; ++row)
         {
-            if (!isSolution)
+            if (!config.isSolution)
             {
                 this.grid[row] = [];
             }
@@ -701,7 +703,7 @@ export default class Display
                     group.appendChild(letter_elem);
                     gridElement = {rect: rect, text: letter_elem, clue_id: clue_id};
                     
-                    if (!isSolution)
+                    if (!config.isSolution)
                     {
                         if (this.storageContext?.getCurrentStorageSource() != StorageSource.UrlParam)
                         {
@@ -726,15 +728,19 @@ export default class Display
                 
                 svg.appendChild(group);
 
-                if (!isSolution)
+                if (!config.isSolution)
                 {
                     this.grid[row][col] = gridElement;
                     if (this.storageContext?.getCurrentStorageSource() != StorageSource.UrlParam)
                     {
                         rect.addEventListener("click", function(){that.handleRectClick(row, col);});
-                        if (typeof (puzzleInfo.solutions) !== 'undefined' && gridElement != null)
+                        if ((!config.skipContextMenu) && (typeof (puzzleInfo.solutions) !== 'undefined') && (gridElement != null) )
                         {
                             this.attachContextMenu(puzzleInfo, gridElement, row, col);
+                        }
+                        else
+                        {
+                            rect.addEventListener("contextmenu", function(e){e.preventDefault();});
                         }
                     }
                 }
