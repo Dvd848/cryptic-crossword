@@ -192,3 +192,16 @@ h2 {
     min-width: 180px;
     margin: 5px 2px;
 }
+
+#current_definition {
+    text-align: center;
+    border-radius: 4px;
+    box-shadow: 5px 5px 5px gray;
+    margin: 10px auto;
+    border: 1px solid gray;
+    padding: 4px;
+    visibility: hidden;
+    background-color: #707982;
+    color: white;
+    font-weight: bold;
+}

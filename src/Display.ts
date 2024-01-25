@@ -36,6 +36,7 @@ interface Config {
     skipContextMenu?: boolean;
     skipStorage?: boolean;
     skipShare?: boolean;
+    skipCurrentDef?: boolean;
   }
 
 type IndexdInfo = {
@@ -323,6 +324,8 @@ export default class Display
     private activeContextMenu : bootstrap.Popover | null = null;
     private storageContext : StorageContext | null = null;
     private clues: Record<number, ClueData> = {};
+    private puzzleInfo : CrosswordPuzzleInfo | null = null;
+    private config : Config = {};
 
     private readonly TILE_DIMENSIONS = 40;
     private readonly BLOCKED_TILE = '#';
@@ -339,6 +342,8 @@ export default class Display
     async showCrossword(puzzleInfo: CrosswordPuzzleInfo, config: Config)
     {
         this.clues = {};
+        this.puzzleInfo = puzzleInfo;
+        this.config = config;
 
         document.getElementById("title")!.textContent = `תשבץ אינטל ${puzzleInfo.id}`;
         document.getElementById("author")!.textContent = `${puzzleInfo.author}`;
@@ -408,7 +413,7 @@ export default class Display
         puzzleInfo.definitions = {"across": {1: puzzleInfo.definitions[direction as "across" | "down"][defId]}, "down": {}};
         puzzleInfo.sol_hash = await Utils.digestMessage(puzzleInfo.sol_grid[0].join(""));
 
-        await this.showCrossword(puzzleInfo, {"skipStorage": true, "skipShare": true, "skipContextMenu": true});
+        await this.showCrossword(puzzleInfo, {"skipStorage": true, "skipShare": true, "skipContextMenu": true, "skipCurrentDef": true});
         
         document.getElementById("title")!.textContent = `הגדרה אקראית מתוך תשבץ אינטל ${puzzleInfo.id}`;
         const h3Element = document.querySelector("#clues_horizontal h3");
@@ -432,6 +437,7 @@ export default class Display
         button.textContent = "עוד הגדרה אקראית";
         button.addEventListener('click', this.randomSingle);
         document.getElementById("check_solution_wrapper")!.appendChild(button);
+        document.getElementById("current_definition")!.style.display = "none";
 
         this.selectDefinitionById(1, Direction.Horizontal);
     }
@@ -476,7 +482,7 @@ export default class Display
                 const modalHeader = document.getElementById("solution_modal")!.getElementsByClassName("modal-header")![0];
                 if (current_hash === puzzleInfo.sol_hash)
                 {
-                    modalMessage.innerHTML = "<h4>כל הכבוד!</h4><p>פתרתם את התשבץ!</p>";
+                    modalMessage.innerHTML = "<h4>כל הכבוד!</h4><p>הפתרון שלכם נכון!</p>";
                     modalHeader.classList.add("success");
                     modalHeader.classList.remove("failure");
                 }
@@ -747,6 +753,16 @@ export default class Display
             }
         }
 
+        if (!config.isSolution)
+        {
+            const wrapper = document.getElementById("wrapper");
+            document.body.addEventListener('click', function(event) {
+                if ( (event.target == document.body) || (event.target == wrapper) ) {
+                    that.highlightDefinitionByCoordinate(null);
+                }
+            });
+        }
+
         return svg;
     }
 
@@ -959,6 +975,15 @@ export default class Display
 
         if (coordinate == null)
         {
+            if (!this.config.skipCurrentDef)
+            {
+                const currentDefinition = document.getElementById("current_definition");
+                if (currentDefinition)
+                {
+                    currentDefinition.textContent = '&nbsp;';
+                    currentDefinition.style.visibility = "hidden";
+                }
+            }
             return;
         }
 
@@ -983,6 +1008,25 @@ export default class Display
 
         gridElement?.rect.setAttribute("fill", "#ffffcc");
         gridElement?.rect.setAttribute("class", "highlighted");
+
+        if (!this.config.skipCurrentDef)
+        {
+            const firstCoordinate = this.getFirstCoordinateForActiveCoordinate();
+            if (firstCoordinate != null)
+            {
+                const firstGridElement = this.grid[firstCoordinate.row][firstCoordinate.col];
+                if (firstGridElement?.clue_id != null)
+                {
+                    const clue = this.puzzleInfo?.definitions[this.clickContext.direction][firstGridElement?.clue_id];
+                    const currentDefinition = document.getElementById("current_definition");
+                    if (clue && currentDefinition)
+                    {
+                        currentDefinition.textContent = clue;
+                        currentDefinition.style.visibility = "visible";
+                    }
+                }
+            }
+        }
         
         document.getElementById(`dummy_input_r${coordinate.row}_c${coordinate.col}`)?.focus();
     }
