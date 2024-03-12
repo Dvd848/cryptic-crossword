@@ -326,6 +326,8 @@ export default class Display
     private clues: Record<number, ClueData> = {};
     private puzzleInfo : CrosswordPuzzleInfo | null = null;
     private config : Config = {};
+    private wordsSeparated = false;
+    private puzzleSvg : SVGElement | null = null;
 
     private readonly TILE_DIMENSIONS = 40;
     private readonly BLOCKED_TILE = '#';
@@ -365,9 +367,10 @@ export default class Display
         
         this.addKeyListener();
         
-        this.crossword.appendChild(this.createPuzzleSvg(puzzleInfo, config));
+        this.puzzleSvg = this.createPuzzleSvg(puzzleInfo, config);
+        this.crossword.appendChild(this.puzzleSvg);
         this.crossword.appendChild(this.createDummyInputGrid(puzzleInfo.dimensions.rows, puzzleInfo.dimensions.columns));
-
+        
         this.clues_horizontal.appendChild(this.createClues("across", puzzleInfo));
         this.clues_vertical.appendChild(this.createClues("down", puzzleInfo));
 
@@ -506,6 +509,71 @@ export default class Display
                 divElement.appendChild(this.createPuzzleSvg(puzzleInfo, {...config, ...{isSolution: true}}));
                 document.getElementById("solution_tab_content")?.appendChild(divElement);
             }
+        }
+    }
+
+    private toggleSeparateWords() {
+        // TODO: Refactor this function :-O
+        try {
+            Object.keys(Direction).forEach(direction => {
+                const dir = Direction[direction as keyof typeof Direction];
+                const currentDefinitions = this.puzzleInfo!.definitions[dir];
+                
+                for (const clueId in currentDefinitions) {
+                    const id = parseInt(clueId);
+                    const coordinate = this.clues[id].coordinate;
+                    const clue = currentDefinitions[id];
+
+                    const wordLengthRegex = /\(([\d,\s]+)\)/;
+                    const withOtherClueRegex = /עם\s+[\d]+\s*(מאוזן|מאונך)/;
+        
+                    const match = clue.match(wordLengthRegex);
+
+                    if (match && match[1] && !withOtherClueRegex.test(clue)) {
+                        const wordLengths = match[1].split(',').map(Number);
+                        if (wordLengths.length > 1) {
+                            let offset = 0;
+                            wordLengths.slice(0, -1).forEach((len) => {
+                                let [x1, y1, x2, y2] = [0, 0, 0, 0];
+                                
+                                if (dir == Direction.Horizontal) {
+                                    x1 = ((coordinate.col + 1 - len - offset) * this.TILE_DIMENSIONS);
+                                    y1 = ((coordinate.row) * this.TILE_DIMENSIONS) + 1;
+                                    x2 = x1;
+                                    y2 = y1 + this.TILE_DIMENSIONS - 2;
+                                } else {
+                                    y1 = ((coordinate.row + len + offset) * this.TILE_DIMENSIONS);
+                                    x1 = ((coordinate.col) * this.TILE_DIMENSIONS) + 1;
+                                    y2 = y1;
+                                    x2 = x1 + this.TILE_DIMENSIONS - 2;
+                                }
+                                offset += len;
+                                for (let i = 0; i < 5; i++) { // Some browsers show a gray line if this is done only once
+                                    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                                    line.setAttribute("x1", x1.toString());
+                                    line.setAttribute("y1", y1.toString());
+                                    line.setAttribute("x2", x2.toString());
+                                    line.setAttribute("y2", y2.toString());
+                                    line.setAttribute("stroke-width", "1");
+                                    if (!this.wordsSeparated) {
+                                        line.setAttribute("stroke-dasharray", "2");
+                                        line.setAttribute("stroke", "white");
+                                    }
+                                    else {
+                                        line.setAttribute("stroke", "black");
+                                    }
+
+                                    this.puzzleSvg!.appendChild(line);
+                                }
+                            });
+                        }
+                    }
+                }
+            });
+
+            this.wordsSeparated = !this.wordsSeparated;
+        } catch(err) {
+            console.log("Error while separating words: ", err);
         }
     }
 
@@ -740,7 +808,7 @@ export default class Display
                     if (this.storageContext?.getCurrentStorageSource() != StorageSource.UrlParam)
                     {
                         rect.addEventListener("click", function(){that.handleRectClick(row, col);});
-                        if ((!config.skipContextMenu) && (typeof (puzzleInfo.solutions) !== 'undefined') && (gridElement != null) )
+                        if ((!config.skipContextMenu) && (gridElement != null) )
                         {
                             this.attachContextMenu(puzzleInfo, gridElement, row, col);
                         }
@@ -780,11 +848,13 @@ export default class Display
             gridElement.rect.dispatchEvent(clonedEvent); 
         });
 
+        const closePopover = function(){bootstrap.Popover.getInstance(gridElement.rect)?.hide();};
+
         const closeElement = document.createElement('button');
         closeElement.type = "button";
         closeElement.className = 'btn-close';
         closeElement.setAttribute('aria-hidden', 'true');
-        closeElement.addEventListener('click', function(){bootstrap.Popover.getInstance(gridElement.rect)?.hide();});
+        closeElement.addEventListener('click', closePopover);
 
         const spanElement = document.createElement('span');
         spanElement.textContent = 'אפשרויות';
@@ -797,25 +867,36 @@ export default class Display
         placeholder.className = 'context_menu_placeholder';
         placeholder.id = `context_menu_placeholder_${row}_${col}`;
 
-        const checkClueElement = document.createElement('button');
-        checkClueElement.type = "button";
-        checkClueElement.className = 'btn btn-secondary';
-        checkClueElement.textContent = "בדיקת נכונות הפתרון";
-        checkClueElement.addEventListener('click', function(){
-            that.handleContextMenuClueAction(puzzleInfo, placeholder, ClueAction.CheckClueCorrectness);
+        const separateWordsElement = document.createElement('button');
+        separateWordsElement.type = "button";
+        separateWordsElement.className = 'btn btn-secondary';
+        separateWordsElement.textContent = "סימון גבולות מילה";
+        separateWordsElement.addEventListener('click', function(){
+            that.toggleSeparateWords();
+            closePopover();
         });
+        divElement.appendChild(separateWordsElement);
+        
+        if (typeof (puzzleInfo.solutions) !== 'undefined') {
+            const checkClueElement = document.createElement('button');
+            checkClueElement.type = "button";
+            checkClueElement.className = 'btn btn-secondary';
+            checkClueElement.textContent = "בדיקת נכונות הפתרון";
+            checkClueElement.addEventListener('click', function(){
+                that.handleContextMenuClueAction(puzzleInfo, placeholder, ClueAction.CheckClueCorrectness);
+            });
+    
+            const revealClueSolution = document.createElement('button');
+            revealClueSolution.type = "button";
+            revealClueSolution.className = 'btn btn-danger';
+            revealClueSolution.textContent = "צפייה בפתרון ההגדרה";
+            revealClueSolution.addEventListener('click', function(){
+                that.handleContextMenuClueAction(puzzleInfo, placeholder, ClueAction.RevealClueSolution);
+            });
+            divElement.appendChild(checkClueElement);
+            divElement.appendChild(revealClueSolution);
+        }
 
-        const revealClueSolution = document.createElement('button');
-        revealClueSolution.type = "button";
-        revealClueSolution.className = 'btn btn-danger';
-        revealClueSolution.textContent = "צפייה בפתרון ההגדרה";
-        revealClueSolution.addEventListener('click', function(){
-            that.handleContextMenuClueAction(puzzleInfo, placeholder, ClueAction.RevealClueSolution);
-        });
-
-
-        divElement.appendChild(checkClueElement);
-        divElement.appendChild(revealClueSolution);
         divElement.appendChild(placeholder);
 
         const popover = new bootstrap.Popover(gridElement.rect, {
@@ -826,6 +907,8 @@ export default class Display
             sanitize: false,
             placement: 'bottom',
         });
+
+        
 
         gridElement.rect.addEventListener('hidden.bs.popover', () => {
             placeholder.innerHTML = '';
