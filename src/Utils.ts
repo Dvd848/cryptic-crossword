@@ -53,3 +53,36 @@ export const digestMessage = async function (message: string) {
 export const randomElement = function(arr: any[]) {
     return arr[Math.floor(Math.random() * arr.length)];
 }
+
+export const onLongPress = function(element: SVGElement, callback: (element: SVGElement) => void): void {
+    let timeoutId: number | null;
+
+    element.addEventListener('touchstart', function(e: TouchEvent) {
+        timeoutId = window.setTimeout(function() {
+            timeoutId = null;
+            e.stopPropagation();
+            callback(e.target as SVGElement);
+        }, 800);
+    });
+
+    element.addEventListener('touchend', function () {
+        if (timeoutId) window.clearTimeout(timeoutId);
+    });
+
+    element.addEventListener('touchmove', function () {
+        if (timeoutId) window.clearTimeout(timeoutId);
+    });
+}
+
+export const IsiOS = function() {
+    return [
+      'iPad Simulator',
+      'iPhone Simulator',
+      'iPod Simulator',
+      'iPad',
+      'iPhone',
+      'iPod'
+    ].includes(navigator.platform)
+    // iPad on iOS 13 detection
+    || (navigator.userAgent.includes("Mac") && "ontouchend" in document)
+  }

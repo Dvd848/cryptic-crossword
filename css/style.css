@@ -101,7 +101,7 @@ h2 {
     margin: 0px;
     outline: none;
     vertical-align: baseline;
-    /*background: red;*/
+    caret-color: transparent;
 }
 
 #crossword_select {
@@ -204,4 +204,19 @@ h2 {
     background-color: #707982;
     color: white;
     font-weight: bold;
+}
+
+.clue_id_text {
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none; /* Standard syntax */
+    fill: black; 
+    font-size: 10px;
+}
+
+.letter_elem_text {
+    font-size: 30px;
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none; /* Standard syntax */
 }

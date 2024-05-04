@@ -761,7 +761,7 @@ export default class Display
                         const clue_id_elem = document.createElementNS("http://www.w3.org/2000/svg", "text");
                         clue_id_elem.setAttribute("x", `${col * this.TILE_DIMENSIONS + this.TILE_DIMENSIONS - 4}`);
                         clue_id_elem.setAttribute("y", `${row * this.TILE_DIMENSIONS + 12}`);
-                        clue_id_elem.setAttribute("style", "fill: black; font-size: 10px;");
+                        clue_id_elem.classList.add("clue_id_text");
                         clue_id_elem.textContent = puzzleInfo.grid[row][col];
                         group.appendChild(clue_id_elem);
 
@@ -772,8 +772,8 @@ export default class Display
                     letter_elem.setAttribute("x", `${col * this.TILE_DIMENSIONS + (this.TILE_DIMENSIONS / 2)}`);
                     letter_elem.setAttribute("y", `${row * this.TILE_DIMENSIONS + (this.TILE_DIMENSIONS - (this.TILE_DIMENSIONS / 4))}`);
                     letter_elem.setAttribute("text-anchor", "middle");
-                    letter_elem.setAttribute("style", "font-size: 30px;");
                     letter_elem.setAttribute("fill", "black");
+                    letter_elem.classList.add("letter_elem_text");
                     group.appendChild(letter_elem);
                     gridElement = {rect: rect, text: letter_elem, clue_id: clue_id};
                     
@@ -847,6 +847,16 @@ export default class Display
             const clonedEvent = new Event('contextmenu', e);
             gridElement.rect.dispatchEvent(clonedEvent); 
         });
+
+        if (Utils.IsiOS()) 
+        {
+            Utils.onLongPress(gridElement.rect, function(){
+                that.contextMenu(row, col);
+            });
+            Utils.onLongPress(gridElement.text, function(){
+                that.contextMenu(row, col);
+            });
+        }
 
         const closePopover = function(){bootstrap.Popover.getInstance(gridElement.rect)?.hide();};
 
