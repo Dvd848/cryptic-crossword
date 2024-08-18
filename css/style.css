@@ -197,14 +197,30 @@ h2 {
     text-align: center;
     border-radius: 4px;
     box-shadow: 5px 5px 5px gray;
-    margin: 10px auto;
+    margin: 0px auto 10px auto;
     border: 1px solid gray;
     padding: 4px;
-    visibility: hidden;
     background-color: #707982;
     color: white;
     font-weight: bold;
 }
+
+#current_definition_mark_solved, #more_options {
+    text-align: center;
+    margin: 8px 0;
+    padding: 4px;
+    font-weight: bold;
+    flex: 1;   
+}
+
+#current_definition_mark_solved[disabled] span, #current_definition_mark_solved[data-solved="false"] span {
+    display: none;
+}
+
+#current_definition_mark_solved {
+    margin-left: 15px;
+}
+
 
 .clue_id_text {
     -webkit-user-select: none; /* Safari */

@@ -384,6 +384,9 @@ export default class Display
             document.getElementById("share_solution_wrapper")?.remove();
         }
 
+        this.setupMoreOptions();
+        this.setupCurrentDefMarkSolved();
+
         this.setTitle(`תשבץ אינטל ${puzzleInfo.id}`);
 
         document.getElementById("wrapper")!.classList.remove("hide");
@@ -441,6 +444,8 @@ export default class Display
         button.addEventListener('click', this.randomSingle);
         document.getElementById("check_solution_wrapper")!.appendChild(button);
         document.getElementById("current_definition")!.style.display = "none";
+        document.getElementById("more_options")!.style.display = "none";
+        document.getElementById("current_definition_mark_solved")!.style.display = "none";
 
         this.selectDefinitionById(1, Direction.Horizontal);
     }
@@ -454,6 +459,70 @@ export default class Display
             newTitle += sep + title;
         }
         document.title = newTitle;
+    }
+
+    private setupMoreOptions()
+    {
+        const moreOptions = <HTMLButtonElement>document.getElementById("more_options");
+        if (moreOptions)
+        {
+            moreOptions.disabled = true;
+            const that = this;
+            moreOptions.addEventListener("click", function(e){
+                const solution = document.getElementById("solution_tab_content");
+                if (solution && solution.checkVisibility())
+                {
+                    return;
+                }
+                const activeCoords = that.clickContext.activeCoordinate;
+                if (activeCoords)
+                {
+                    that.contextMenu(activeCoords.row, activeCoords.col);
+                }
+            });
+        }
+    }
+
+    private setupCurrentDefMarkSolved()
+    {
+        const currentDefMarkSolved = <HTMLButtonElement>document.getElementById("current_definition_mark_solved");
+        if (!currentDefMarkSolved)
+        {
+            return;
+        }
+
+        currentDefMarkSolved.disabled = true;
+
+        if (this.config.skipCurrentDef)
+        {
+            return;
+        }
+
+        const that = this;
+        currentDefMarkSolved.addEventListener("click", function(e){
+
+            const firstCoordinate = that.getFirstCoordinateForActiveCoordinate();
+            if (firstCoordinate == null)
+            {
+                return;
+            }
+
+            const firstGridElement = that.grid[firstCoordinate.row][firstCoordinate.col];
+            if (firstGridElement?.clue_id == null)
+            {
+                return;
+            }
+
+            const checkbox = <HTMLInputElement>document.getElementById(`clue_checkbox_${firstGridElement?.clue_id}_${that.clickContext.direction}`);
+            if (!checkbox)
+            {
+                return;
+            }
+
+            checkbox.checked = !checkbox.checked;
+            checkbox.dispatchEvent(new Event('change'));
+            //currentDefMarkSolved.setAttribute("data-solved", String(checkbox.checked));
+        });
     }
 
     private setupCheckSolution(puzzleInfo: CrosswordPuzzleInfo, config: Config)
@@ -646,6 +715,7 @@ export default class Display
             const checkbox = document.createElement("input");
             checkbox.type = "checkbox";
             checkbox.classList.add("clue_checkbox");
+            checkbox.id = `clue_checkbox_${int_id}_${direction}`;
 
             const dt = document.createElement("dt");
             if (this.storageContext?.getCurrentStorageSource() != StorageSource.UrlParam)
@@ -671,11 +741,23 @@ export default class Display
             checkbox.addEventListener("change", () => {
                 if (checkbox.checked) {
                     dd.classList.add("solved");
-                    that.storageContext?.setClueSolved(int_id, directionStr, true);
                 } else {
                     dd.classList.remove("solved");
                 }
                 that.storageContext?.setClueSolved(int_id, directionStr, checkbox.checked);
+                const firstCoordinate = that.getFirstCoordinateForActiveCoordinate();
+                if (firstCoordinate != null)
+                {
+                    const firstGridElement = that.grid[firstCoordinate.row][firstCoordinate.col];
+                    if ( (firstGridElement?.clue_id == int_id) && (that.clickContext.direction == directionStr))
+                    {
+                        const currentDefMarkSolved = <HTMLButtonElement>document.getElementById("current_definition_mark_solved");
+                        if (currentDefMarkSolved)
+                        {
+                            currentDefMarkSolved.setAttribute("data-solved", String(checkbox.checked));
+                        }
+                    }
+                }
             });
 
 
@@ -1073,8 +1155,19 @@ export default class Display
                 const currentDefinition = document.getElementById("current_definition");
                 if (currentDefinition)
                 {
-                    currentDefinition.textContent = '&nbsp;';
-                    currentDefinition.style.visibility = "hidden";
+                    currentDefinition.textContent = '[בחרו הגדרה]';
+                }
+
+                const moreOptions = <HTMLButtonElement>document.getElementById("more_options");
+                if (moreOptions)
+                {
+                    moreOptions.disabled = true;
+                }
+
+                const markSolved = <HTMLButtonElement>document.getElementById("current_definition_mark_solved");
+                if (markSolved)
+                {
+                    markSolved.disabled = true;
                 }
             }
             return;
@@ -1115,7 +1208,25 @@ export default class Display
                     if (clue && currentDefinition)
                     {
                         currentDefinition.textContent = clue;
-                        currentDefinition.style.visibility = "visible";
+                        currentDefinition.style.maxWidth = `${this.puzzleSvg!.getAttribute("width")}px`;
+                    }
+
+                    const moreOptions = <HTMLButtonElement>document.getElementById("more_options");
+                    if (moreOptions)
+                    {
+                        moreOptions.disabled = false;
+                    }
+
+                    const markSolved = <HTMLButtonElement>document.getElementById("current_definition_mark_solved");
+                    if (markSolved)
+                    {
+                        markSolved.disabled = false;
+                    }
+
+                    const checkbox = <HTMLInputElement>document.getElementById(`clue_checkbox_${firstGridElement?.clue_id}_${this.clickContext.direction}`);
+                    if (checkbox)
+                    {
+                        markSolved.setAttribute("data-solved", String(checkbox.checked));
                     }
                 }
             }
