@@ -22,7 +22,7 @@ def is_cell_blocked(cell):
 def process_docx_directory(directory_path, out_dir):
     seen = set()
     for filename in os.listdir(directory_path):
-        if filename.endswith(".docx"):
+        if filename.endswith(".docx") and not "$" in filename:
             print(f"Parsing '{filename}'")
             file_path = os.path.join(directory_path, filename)
             cid = process_crossword(file_path, out_dir)
@@ -45,6 +45,7 @@ def process_docx_directory(directory_path, out_dir):
 class State(enum.Enum):
     READ_CROSSWORD_ID = "id"
     READ_AUTHOR = "author"
+    SEARCH_FOR_DEFINITIONS = "search_defs"
     READ_DOWN_TITLE = "down_title"
     READ_DOWN_DEFINITIONS = "down"
     READ_ACROSS_TITLE = "across_title"
@@ -78,20 +79,28 @@ def process_crossword(path, out_dir):
             state = State.READ_AUTHOR
         elif state == State.READ_AUTHOR:
             crossword[state.value] = line
-            state = State.READ_DOWN_TITLE
-        elif state == State.READ_DOWN_TITLE:
-            assert(line == "מאונך")
-            state = State.READ_DOWN_DEFINITIONS
+            state = State.SEARCH_FOR_DEFINITIONS
+        elif state == State.SEARCH_FOR_DEFINITIONS:
+            if line == "מאונך":
+                state = State.READ_DOWN_DEFINITIONS
+            elif line == "מאוזן":
+                state = State.READ_ACROSS_DEFINITIONS
+            else:
+                raise RuntimeError(f"Unexpected line: {line}")
         elif (state == State.READ_DOWN_DEFINITIONS) or (state == State.READ_ACROSS_DEFINITIONS):
             if line == "מאוזן":
                 state = State.READ_ACROSS_DEFINITIONS
+            elif line == "מאונך":
+                state = State.READ_DOWN_DEFINITIONS
             else:
                 match = re.search(REGEX_DEFINITION, line)
                 if match:
                     number = int(match.group(1))
                     text = match.group(2)
                 crossword["definitions"][state.value][number] = text
-    assert(state == State.READ_ACROSS_DEFINITIONS)
+    assert( (state == State.READ_DOWN_DEFINITIONS) or (state == State.READ_ACROSS_DEFINITIONS) )
+    for def_state in [State.READ_DOWN_DEFINITIONS.value, State.READ_ACROSS_DEFINITIONS.value]:
+        assert(len(crossword["definitions"][def_state]) > 0)
 
     assert(len(document.tables) == 1)
     table = document.tables[0]
