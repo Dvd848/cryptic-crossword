@@ -267,7 +267,7 @@
       "26": "\u05d4\u05d7\u05e4\"\u05e9 \u05e9\u05dc\u05d9 \u05d1\u05e8\u05d7 \u05d4\u05d1\u05d9\u05ea\u05d4 \u05d1\u05e2\u05e7\u05d1\u05d5\u05ea \u05de\u05d3\u05d9\u05e0\u05d9\u05d5\u05ea \u05e9\u05de\u05e8\u05e0\u05d9\u05ea (11)"
     }
   },
-  "sol_hash": "ab2a55105efb0e656c8bc7204b6e7f730fec909f3b42f9af64e0fde725bdacfd58fee1db2599ab213c06c928a5e7e7b992e61fd1b3a1149c8f1f652b9fd5c0ce",
+  "sol_hash": "de03c80c08559afa4bd90799aeeba4c1d26838a0388ebc63a2cfecaa14d649ffc5e408eec078f85fef29f5476a21d1d55ccc2b994b30a28080b6b35655c99a57",
   "sol_grid": [
     [
       "\u05d1",
@@ -339,7 +339,7 @@
       "\u05d5",
       "#",
       "#",
-      "\u05db",
+      "\u05e7",
       "#",
       "\u05e9",
       "#",
@@ -498,7 +498,7 @@
     "down": {
       "7": "\u05d1\u05e2\u05dc\u05d9\u05d4\u05de\u05d0\u05d4",
       "6": "\u05e8\u05e9\u05e2\u05d4",
-      "5": "\u05db\u05d9\u05de\u05d9\u05db\u05dc\u05d9\u05de",
+      "5": "\u05db\u05d9\u05de\u05d9\u05e7\u05dc\u05d9\u05de",
       "4": "\u05e9\u05d5\u05d3\u05d5\u05e9\u05d1\u05e8",
       "3": "\u05d5\u05d3\u05d0\u05d5\u05ea",
       "2": "\u05d4\u05db\u05dc",
